@@ -1,3 +1,34 @@
+rm.allrowNA <- function(X) { 
+  
+  if(inherits(X, "list")){
+    
+    lapply(X, function(i) i[rowSums(is.na(i) | i == "") != ncol(i), , drop = FALSE])
+    
+  } else { X[rowSums(is.na(X) | X == "") != ncol(X), , drop = FALSE] }
+}
+
+#===============================================================================================================================
+       
+rm.allcolNA <- function(X) { 
+  
+  if(inherits(X, "list")){
+    
+    lapply(X, function(i) i[, colSums(is.na(i) | i == "") != nrow(i), drop = FALSE])
+    
+  } else { X[, colSums(is.na(X) | X == "") != nrow(X), drop = FALSE] }
+}
+
+#===============================================================================================================================
+           
+rm.colrowNA <- function(X){
+
+r <- rm.allrowNA(X)
+rm.allcolNA(r)  
+
+}                                      
+
+#===============================================================================================================================
+
 data.tree_ <- function(data, toplab = NULL, cex = 1, auto = FALSE, ...){
   
   if(auto){    
@@ -11,7 +42,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, auto = FALSE, ...){
   
 } 
 
-
+#===============================================================================================================================
 
 data_tree <- function(data, vars=c("study","group","outcome","time"),outcome=1, study="Sheen et al"){
   
