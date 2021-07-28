@@ -40,12 +40,7 @@ rm.colrowNA <- function(X){
 }                     
 #===============================================================================================================================
 
-data.tree_ <- function(data, toplab = NULL, cex = 1, auto = FALSE, ...){
-  
-  if(auto){    
-    cats <- sapply(data, Negate(is.numeric))  
-    data <- data[cats]
-  }
+data.tree_ <- function(data, toplab = NULL, cex = 1, ...){
   
   toplab <- if(is.null(toplab)) names(data) else toplab
   
@@ -54,9 +49,10 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, auto = FALSE, ...){
 } 
 
 #===============================================================================================================================
-           
-study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name=NULL, reset = TRUE,
-                       structure = c("simple","typical","complex"),output_studies = FALSE)
+
+study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name = NULL, reset = TRUE,
+                       structure = c("simple","typical","complex"), output_studies = FALSE,
+                       toplab = NULL, cex = 1)
 {
   
   data <- rm.colrowNA(trim_(data))
@@ -108,9 +104,9 @@ study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name
     
     main <- paste(main_title,"studies")
     
-    invisible(lapply(seq_along(list2plot), function(i) data.tree(list2plot[[i]], main = main[i])))
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex)))
     
-    if(output_studies) hlist
+    if(output_studies) res
     
   } else {
     
@@ -127,7 +123,7 @@ study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL))}
     
-    invisible(lapply(seq_along(list2plot), function(i) data.tree(list2plot[[i]], main = study_name[i])))
+    invisible(lapply(list2plot, data.tree_, toplab, cex))
   }
 }
 
