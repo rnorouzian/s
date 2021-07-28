@@ -54,7 +54,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, auto = FALSE, ...){
 } 
 
 #===============================================================================================================================
-
+           
 study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name=NULL, reset = TRUE,
                        structure = c("simple","typical","complex"),output_studies = FALSE)
 {
@@ -63,6 +63,12 @@ study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name
   
   ss <- substitute(study_col)
   sss <- deparse(ss)
+  
+  if(reset){
+    graphics.off()
+    org.par <- par(no.readonly = TRUE)
+    on.exit(par(org.par))
+  } 
   
   data <- data %>%
     dplyr::select({{study_col}},{{grp2_col}},{{grp3_col}},{{time_col}})
@@ -96,12 +102,6 @@ study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name
     
     list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
     
-    if(reset){
-      graphics.off()
-      org.par <- par(no.readonly = TRUE)
-      on.exit(par(org.par))
-    } 
-    
     LL <- length(list2plot)
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL))}
@@ -115,13 +115,19 @@ study_tree <- function(data, study_col, grp2_col, grp3_col, time_col, study_name
   } else {
     
     study_name <- trimws(study_name)
+    study_names <- unique(data[[sss]])
     
-    if(!study_name %in% unique(data[[sss]])) stop(dQuote(toString(study_name))," not found in the studies.", call. = FALSE)
+    idx <- study_name %in% study_names 
     
-    dd <- subset(data,eval(ss)==study_name)
+    if(!all(idx)) stop(dQuote(toString(study_name[!idx]))," not found in the studies.", call. = FALSE)
     
-    data.tree(dd, main = study_name)
+    list2plot <- lapply(study_name, function(i) subset(data, eval(ss) == i))
     
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL))}
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree(list2plot[[i]], main = study_name[i])))
   }
 }
 
