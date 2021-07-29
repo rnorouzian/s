@@ -37,14 +37,37 @@ rm.colrowNA <- function(X){
   
   rm.allcolNA(rm.allrowNA(X))  
   
-}                     
+} 
+           
 #===============================================================================================================================
 
+#===== Hack to fix the bug in plotrix package not showcount argument (reported the bug to the package author as well)
+#===== Credit to: MrFlick (https://stackoverflow.com/a/68570496/7223434) 
+
+sizetree <- plotrix::sizetree
+environment(sizetree) <- globalenv()
+# This "path" navigates the AST for the function to find the offending line of code
+path <- c(8, 3, 5, 4, 2, 3, 2, 3, 2, 3, 8, 3, 5)
+orig <- body(sizetree)[[path]]
+orig
+## Problem line, no showcount= parameter
+# sizetree(nextx, right, top, right + 1, lastcenter = top - xfreq[bar]/2, 
+#     showval = showval, stacklabels = stacklabels, firstcall = FALSE, 
+#     col = newcol, border = border, base.cex = base.cex)
+## fix it up
+scall <- orig
+scall$showcount <- quote(showcount)
+body(sizetree)[[path]] <- scall
+
+#=====           
+           
+#===============================================================================================================================
+           
 data.tree_ <- function(data, toplab = NULL, cex = 1, ...){
   
   toplab <- if(is.null(toplab)) names(data) else toplab
   
-  plotrix::sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = FALSE, ...)
+  sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = FALSE, ...)
 }
 
 #===============================================================================================================================
