@@ -41,14 +41,14 @@ rm.colrowNA <- function(X){
            
 #===============================================================================================================================
 
-#===== Hack to fix the bug in plotrix package not showcount argument (reported the bug to the package author as well)
+#===== Hack to fix the bug in plotrix package regarding its 'showcount' argument (reported the bug to the package author as well)
 #===== Credit to: MrFlick (https://stackoverflow.com/a/68570496/7223434) 
 
-sizetree <- plotrix::sizetree
-environment(sizetree) <- globalenv()
+sizetree_ <- plotrix::sizetree
+environment(sizetree_) <- globalenv()
 # This "path" navigates the AST for the function to find the offending line of code
 path <- c(8, 3, 5, 4, 2, 3, 2, 3, 2, 3, 8, 3, 5)
-orig <- body(sizetree)[[path]]
+orig <- body(sizetree_)[[path]]
 orig
 ## Problem line, no showcount= parameter
 # sizetree(nextx, right, top, right + 1, lastcenter = top - xfreq[bar]/2, 
@@ -57,18 +57,18 @@ orig
 ## fix it up
 scall <- orig
 scall$showcount <- quote(showcount)
-body(sizetree)[[path]] <- scall
+body(sizetree_)[[path]] <- scall
 
 #=====           
            
 #===============================================================================================================================
            
-data.tree_ <- function(data, toplab = NULL, cex = 1, ...){
+data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
   
   toplab <- if(is.null(toplab)) names(data) else toplab
   
-  sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = FALSE, ...)
-}
+  sizetree_(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = rowcount, ...)
+} 
 
 #===============================================================================================================================
 
@@ -173,7 +173,7 @@ study_tree_limited <- function(data, study_col, grp2_col, grp3_col, time_col, st
 
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL) 
+                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE) 
 {
   
   data <- rm.colrowNA(trim_(data))
@@ -228,7 +228,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     main <- paste(main_no., main)
     
-    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex)))
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
     
     if(output_highest_level) res
     
@@ -247,9 +247,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     if(LL > 1L) {par(mfrow = n2mfrow(LL))}
     
-    invisible(lapply(list2plot, data.tree_, toplab, cex))
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
-}                                   
+}                                                
                         
 #===============================================================================================================================
                         
