@@ -129,7 +129,7 @@ study_tree_limited <- function(data, study_col, grp2_col, grp3_col, time_col, st
 
 #===============================================================================================================================
 
-study_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
+meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                  structure = c("simple","typical","complex"), output_highest_level = FALSE,
                  toplab = NULL, cex = 1) 
   {
