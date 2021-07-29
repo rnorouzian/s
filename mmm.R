@@ -130,9 +130,9 @@ study_tree_limited <- function(data, study_col, grp2_col, grp3_col, time_col, st
 #===============================================================================================================================
 
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
-                 structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                 toplab = NULL, cex = 1) 
-  {
+                      structure = c("simple","typical","complex"), output_highest_level = FALSE,
+                      toplab = NULL, cex = 1, main = "Studies") 
+{
   
   data <- rm.colrowNA(trim_(data))
   
@@ -150,44 +150,44 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   
   data <- data %>%
     dplyr::select({{highest_level}}, !!! dot_cols)
-    
+  
   if(is.null(highest_level_name)){
     
     struc <- match.arg(structure) 
-  
- hlist <- data %>%
-    dplyr::group_by({{highest_level}}) %>%
-    dplyr::mutate(grp = across(all_of(str_cols), ~ n_distinct(.) == 1) %>%
-                    purrr::reduce(stringr::str_c, collapse="")) %>%
-    dplyr::ungroup(.) %>%
-    dplyr::group_split(grp, .keep = FALSE)
- 
- res <- Filter(NROW, rev(hlist))
- 
- main_title <- sapply(res, function(i) length(unique(i[[sss]])))
- 
- typic <- function(vec) vec[ceiling(length(vec)/2)]
- 
- nms <- lapply(res, function(i){
-   nr <- sapply(split(i, i[[sss]]), nrow);
-   study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
-   } else if(struc == "simple") {min(as.numeric(names(table(nr))))
-   } else {max(as.numeric(names(table(nr))))};
-   names(nr)[nr == study_type][1]
- })
- 
- list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
- 
- LL <- length(list2plot)
- 
- if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
- 
- main <- paste(main_title,"studies")
- 
- invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex)))
- 
- if(output_highest_level) res
- 
+    
+    hlist <- data %>%
+      dplyr::group_by({{highest_level}}) %>%
+      dplyr::mutate(grp = across(all_of(str_cols), ~ n_distinct(.) == 1) %>%
+                      purrr::reduce(stringr::str_c, collapse="")) %>%
+      dplyr::ungroup(.) %>%
+      dplyr::group_split(grp, .keep = FALSE)
+    
+    res <- Filter(NROW, rev(hlist))
+    
+    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
+    
+    typic <- function(vec) vec[ceiling(length(vec)/2)]
+    
+    nms <- lapply(res, function(i){
+      nr <- sapply(split(i, i[[sss]]), nrow);
+      study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
+      } else if(struc == "simple") {min(as.numeric(names(table(nr))))
+      } else {max(as.numeric(names(table(nr))))};
+      names(nr)[nr == study_type][1]
+    })
+    
+    list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    main <- paste(main_no., main)
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex)))
+    
+    if(output_highest_level) res
+    
   } else {
     
     highest_level_name <- trimws(highest_level_name)
@@ -205,7 +205,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex))
   }
-}                        
+}                     
                         
 #===============================================================================================================================
                         
