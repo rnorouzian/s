@@ -57,9 +57,7 @@ orig
 ## fix it up
 scall <- orig
 scall$showcount <- quote(showcount)
-body(sizetree_)[[path]] <- scall
-
-#=====           
+body(sizetree_)[[path]] <- scall         
            
 #===============================================================================================================================
            
@@ -245,7 +243,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     LL <- length(list2plot)
     
-    if(LL > 1L) {par(mfrow = n2mfrow(LL))}
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
