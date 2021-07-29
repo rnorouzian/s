@@ -44,12 +44,31 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, ...){
   
   toplab <- if(is.null(toplab)) names(data) else toplab
   
-  plotrix::sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, ...)
-  
-} 
+  plotrix::sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = FALSE, ...)
+}
 
 #===============================================================================================================================
 
+pluralify <- function (x, keep.original = FALSE, 
+                         irregular = lexicon::pos_df_irregular_nouns) {
+  
+  stopifnot(is.data.frame(irregular))
+  
+  hits <- match(tolower(x), tolower(irregular[[1]]))
+  
+  ends <- "(sh?|x|z|ch)$"
+  plural_ <- ifelse(grepl(ends, x), "es", "s")
+  out <- gsub("ys$", "ies", paste0(x, plural_))
+  out[which(!is.na(hits))] <- irregular[[2]][hits[which(!is.na(hits))]]
+  
+  c(if (keep.original) {
+    x
+  }, out)
+  
+}           
+           
+#===============================================================================================================================           
+           
 study_tree_limited <- function(data, study_col, grp2_col, grp3_col, time_col, study_name = NULL, reset = TRUE,
                        structure = c("simple","typical","complex"), output_studies = FALSE,
                        toplab = NULL, cex = 1)
@@ -131,7 +150,7 @@ study_tree_limited <- function(data, study_col, grp2_col, grp3_col, time_col, st
 
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = "Studies") 
+                      toplab = NULL, cex = 1, main = NULL) 
 {
   
   data <- rm.colrowNA(trim_(data))
@@ -182,6 +201,8 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
     
+    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify(sss), sss) else main
+    
     main <- paste(main_no., main)
     
     invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex)))
@@ -201,15 +222,15 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     LL <- length(list2plot)
     
-    if(LL > 1L) { par(mfrow = n2mfrow(LL))}
+    if(LL > 1L) {par(mfrow = n2mfrow(LL))}
     
     invisible(lapply(list2plot, data.tree_, toplab, cex))
   }
-}                     
+}                                   
                         
 #===============================================================================================================================
                         
-needzzsf <- c("plotrix","tidyverse")    
+needzzsf <- c("plotrix","lexicon","tidyverse")    
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
