@@ -70,7 +70,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
 
 #===============================================================================================================================
 
-pluralify <- function (x, keep.original = FALSE, 
+pluralify_ <- function (x, keep.original = FALSE, 
                          irregular = lexicon::pos_df_irregular_nouns) {
   
   stopifnot(is.data.frame(irregular))
@@ -143,7 +143,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
     
-    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify(sss), sss) else main
+    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
     
     main <- paste(main_no., main)
     
