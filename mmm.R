@@ -151,11 +151,11 @@ options(dplyr.summarise.inform = FALSE)
 #===== Hack to fix the bug in plotrix package regarding its 'showcount' argument (reported the bug to the package author as well)
 #===== Credit to: MrFlick (https://stackoverflow.com/a/68570496/7223434) 
 
-sizetree_ <- plotrix::sizetree
-environment(sizetree_) <- globalenv()
+sizetree <- plotrix::sizetree
+environment(sizetree) <- globalenv()
 # This "path" navigates the AST for the function to find the offending line of code
 path <- c(8, 3, 5, 4, 2, 3, 2, 3, 2, 3, 8, 3, 5)
-orig <- body(sizetree_)[[path]]
+orig <- body(sizetree)[[path]]
 orig
 ## Problem line, no showcount= parameter
 # sizetree(nextx, right, top, right + 1, lastcenter = top - xfreq[bar]/2, 
@@ -164,7 +164,7 @@ orig
 ## fix it up
 scall <- orig
 scall$showcount <- quote(showcount)
-body(sizetree_)[[path]] <- scall         
+body(sizetree)[[path]] <- scall         
  
 #===============================================================================================================================
            
@@ -172,7 +172,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
   
   toplab <- if(is.null(toplab)) names(data) else toplab
   
-  sizetree_(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = rowcount, ...)
+  sizetree(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = rowcount, ...)
 }           
            
 #===============================================================================================================================
