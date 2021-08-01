@@ -171,6 +171,75 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
 }                                                
                         
 #===============================================================================================================================
+
+cat_overlap <- function(data, study_id, cat_mod){
+  
+  study_id <- rlang::ensym(study_id)
+  cat_mod <- rlang::ensym(cat_mod)
+  
+  studies_cats <- 
+  data %>%
+  dplyr::group_by(!!study_id, !!cat_mod) %>%
+  dplyr::summarise(effects = n(), .groups = "drop_last")
+
+  cat_names <- paste0(rlang::as_string(cat_mod), c(".x", ".y"))
+  
+  studies_cats <- 
+    studies_cats %>%
+    dplyr::inner_join(studies_cats, by = as_string(study_id)) %>%
+    dplyr::group_by(!!!rlang::syms(cat_names)) %>%
+    dplyr::summarise(
+      studies = n(),
+      effects = sum(effects.x),
+      .groups = "drop_last") %>% 
+    dplyr::mutate(n = paste0(studies, " (", effects, ")") )
+  
+  studies_cats %>%
+    dplyr::select(-studies, -effects) %>%
+    tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
+    dplyr::rename(`Moderator Category` = cat_names[1])
+}                        
+                        
+#================================================================================================================================
+ 
+pt.curve <- function(X, adjust = 1, compact = NULL, pch = 16, col = 2, cex = .7, seed = 0, reset = TRUE, add = FALSE, na.rm = TRUE, ...) {
+  
+  if(na.rm) X <- na.omit(X)  
+  n.target <- length(X)
+  
+  d <- density(X, adjust = adjust, n = n.target)
+  
+  n <- if(!is.null(compact)) { 
+    
+    auc <- sum(d$y*median(diff(d$x)))/(diff(range(d$x))*max(d$y))
+    
+    compact*ceiling(n.target/auc)
+    
+  } else { n.target }
+  
+  set.seed(seed)
+  pts <- data.frame(x = runif(n, min(d$x), max(d$x)), y = runif(n, 0, max(d$y)))
+  
+  pts <- pts[pts$y < approx(d$x, d$y, xout = pts$x)$y, ]
+  
+  if(nrow(pts) == 0) stop("Increase the size of sample 'X' OR use 'compact = NULL'.", call. = FALSE)
+  
+  pts <- pts[sample(seq_len(nrow(pts)), n, replace = TRUE), ]
+  
+  if(!add){
+  
+  if(reset) graphics.off()    
+  plot(pts, pch = pch, col = col, cex = cex, ...)
+    
+  } else {
+    
+  points(pts, pch = pch, col = col, cex = cex, ...)
+    
+  }
+}             
+
+                        
+#=================================================================================================================================
                         
 needzzsf <- c("plotrix","lexicon","tidyverse")    
 
