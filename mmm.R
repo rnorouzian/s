@@ -61,33 +61,36 @@ pluralify_ <- function (x, keep.original = FALSE,
                                  
 #===============================================================================================================================
 
-cat_overlap <- function(data, study_id, cat_mod){
+cat_overlap <- function(data, study_id, ...){
   
   study_id <- rlang::ensym(study_id)
-  cat_mod <- rlang::ensym(cat_mod)
-  
-  studies_cats <- 
-  data %>%
-  dplyr::group_by(!!study_id, !!cat_mod) %>%
-  dplyr::summarise(effects = n(), .groups = "drop_last")
-
-  cat_names <- paste0(rlang::as_string(cat_mod), c(".x", ".y"))
-  
-  studies_cats <- 
+  cat_mod <- rlang::ensyms(...)
+  cat_nms <- purrr::map_chr(cat_mod,  ~rlang::as_string(.x))
+    
+setNames(purrr::map(cat_mod,  ~ {
+    
+    studies_cats <- 
+      data %>%
+      dplyr::group_by(!!study_id, !!.x) %>%
+      dplyr::summarise(effects = n(), .groups = 'drop')
+    cat_names <- paste0(rlang::as_string(.x), c(".x", ".y"))
+    
+    studies_cats <- 
+      studies_cats %>%
+      dplyr::inner_join(studies_cats, by = rlang::as_string(study_id)) %>%
+      dplyr::group_by(!!!rlang::syms(cat_names)) %>%
+      dplyr::summarise(
+        studies = n(),
+        effects = sum(effects.x), .groups = 'drop') %>% 
+      dplyr::mutate(n = paste0(studies, " (", effects, ")") )
+    
     studies_cats %>%
-    dplyr::inner_join(studies_cats, by = rlang::as_string(study_id)) %>%
-    dplyr::group_by(!!!rlang::syms(cat_names)) %>%
-    dplyr::summarise(
-      studies = n(),
-      effects = sum(effects.x),
-      .groups = "drop_last") %>% 
-    dplyr::mutate(n = paste0(studies, " (", effects, ")") )
-  
-  studies_cats %>%
-    dplyr::select(-studies, -effects) %>%
-    tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
-    dplyr::rename(`Moderator Category` = cat_names[1])
-}                        
+      dplyr::select(-studies, -effects) %>%
+      tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
+      dplyr::rename(`Moderator Category` = cat_names[1])   
+    
+  }), cat_nms)
+}
                         
 #================================================================================================================================
  
@@ -206,7 +209,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     hlist <- data %>%
       dplyr::group_by({{highest_level}}) %>%
       dplyr::mutate(grp = across(all_of(str_cols), ~ n_distinct(.) == 1) %>%
-                      purrr::reduce(stringr::str_c, collapse="")) %>%
+                      purrr::reduce(stringr::str_c, collapse = "")) %>%
       dplyr::ungroup(.) %>%
       dplyr::group_split(grp, .keep = FALSE)
     
