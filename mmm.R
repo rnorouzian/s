@@ -40,15 +40,6 @@ rm.colrowNA <- function(X){
 } 
            
 #===============================================================================================================================
-           
-data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
-  
-  toplab <- if(is.null(toplab)) names(data) else toplab
-  
-  sizetree_(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = rowcount, ...)
-} 
-
-#===============================================================================================================================
 
 pluralify_ <- function (x, keep.original = FALSE, 
                          irregular = lexicon::pos_df_irregular_nouns) {
@@ -67,89 +58,7 @@ pluralify_ <- function (x, keep.original = FALSE,
   }, out)
   
 }           
-           
-#===============================================================================================================================
-
-meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
-                      structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE) 
-{
-  
-  data <- rm.colrowNA(trim_(data))
-  
-  dot_cols <- rlang::ensyms(...)
-  str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
-  
-  ss <- substitute(highest_level)
-  sss <- deparse(ss)
-  
-  if(reset){
-    graphics.off()
-    org.par <- par(no.readonly = TRUE)
-    on.exit(par(org.par))
-  }
-  
-  data <- data %>%
-    dplyr::select({{highest_level}}, !!! dot_cols)
-  
-  if(is.null(highest_level_name)){
-    
-    struc <- match.arg(structure) 
-    
-    hlist <- data %>%
-      dplyr::group_by({{highest_level}}) %>%
-      dplyr::mutate(grp = across(all_of(str_cols), ~ n_distinct(.) == 1) %>%
-                      purrr::reduce(stringr::str_c, collapse="")) %>%
-      dplyr::ungroup(.) %>%
-      dplyr::group_split(grp, .keep = FALSE)
-    
-    res <- Filter(NROW, rev(hlist))
-    
-    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
-    
-    typic <- function(vec) vec[ceiling(length(vec)/2)]
-    
-    nms <- lapply(res, function(i){
-      nr <- sapply(split(i, i[[sss]]), nrow);
-      study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
-      } else if(struc == "simple") {min(as.numeric(names(table(nr))))
-      } else {max(as.numeric(names(table(nr))))};
-      names(nr)[nr == study_type][1]
-    })
-    
-    list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
-    
-    LL <- length(list2plot)
-    
-    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
-    
-    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
-    
-    main <- paste(main_no., main)
-    
-    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
-    
-    if(output_highest_level) res
-    
-  } else {
-    
-    highest_level_name <- trimws(highest_level_name)
-    highest_level_names <- unique(data[[sss]])
-    
-    idx <- highest_level_name %in% highest_level_names 
-    
-    if(!all(idx)) stop(dQuote(toString(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
-    
-    list2plot <- lapply(highest_level_name, function(i) subset(data, eval(ss) == i))
-    
-    LL <- length(list2plot)
-    
-    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
-    
-    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
-  }
-}                                                
-                        
+                                 
 #===============================================================================================================================
 
 cat_overlap <- function(data, study_id, cat_mod){
@@ -256,5 +165,95 @@ orig
 scall <- orig
 scall$showcount <- quote(showcount)
 body(sizetree_)[[path]] <- scall         
+ 
+#===============================================================================================================================
            
-#===============================================================================================================================                        
+data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
+  
+  toplab <- if(is.null(toplab)) names(data) else toplab
+  
+  sizetree_(data, toplab = toplab, stacklabels = FALSE, border = 0, base.cex = cex, showcount = rowcount, ...)
+}           
+           
+#===============================================================================================================================
+
+meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
+                      structure = c("simple","typical","complex"), output_highest_level = FALSE,
+                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE) 
+{
+  
+  data <- rm.colrowNA(trim_(data))
+  
+  dot_cols <- rlang::ensyms(...)
+  str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+  ss <- substitute(highest_level)
+  sss <- deparse(ss)
+  
+  if(reset){
+    graphics.off()
+    org.par <- par(no.readonly = TRUE)
+    on.exit(par(org.par))
+  }
+  
+  data <- data %>%
+    dplyr::select({{highest_level}}, !!! dot_cols)
+  
+  if(is.null(highest_level_name)){
+    
+    struc <- match.arg(structure) 
+    
+    hlist <- data %>%
+      dplyr::group_by({{highest_level}}) %>%
+      dplyr::mutate(grp = across(all_of(str_cols), ~ n_distinct(.) == 1) %>%
+                      purrr::reduce(stringr::str_c, collapse="")) %>%
+      dplyr::ungroup(.) %>%
+      dplyr::group_split(grp, .keep = FALSE)
+    
+    res <- Filter(NROW, rev(hlist))
+    
+    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
+    
+    typic <- function(vec) vec[ceiling(length(vec)/2)]
+    
+    nms <- lapply(res, function(i){
+      nr <- sapply(split(i, i[[sss]]), nrow);
+      study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
+      } else if(struc == "simple") {min(as.numeric(names(table(nr))))
+      } else {max(as.numeric(names(table(nr))))};
+      names(nr)[nr == study_type][1]
+    })
+    
+    list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
+    
+    main <- paste(main_no., main)
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
+    
+    if(output_highest_level) res
+    
+  } else {
+    
+    highest_level_name <- trimws(highest_level_name)
+    highest_level_names <- unique(data[[sss]])
+    
+    idx <- highest_level_name %in% highest_level_names 
+    
+    if(!all(idx)) stop(dQuote(toString(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
+    
+    list2plot <- lapply(highest_level_name, function(i) subset(data, eval(ss) == i))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
+  }
+}                                                
+                      
