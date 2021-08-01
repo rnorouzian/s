@@ -241,7 +241,7 @@ pt.curve <- function(X, adjust = 1, compact = NULL, pch = 16, col = 2, cex = .7,
                         
 #=================================================================================================================================
                         
-needzzsf <- c("plotrix","lexicon","tidyverse")    
+needzzsf <- c("plotrix","lexicon","tidyverse","rlang")    
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
