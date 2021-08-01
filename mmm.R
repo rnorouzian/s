@@ -186,7 +186,7 @@ cat_overlap <- function(data, study_id, cat_mod){
   
   studies_cats <- 
     studies_cats %>%
-    dplyr::inner_join(studies_cats, by = as_string(study_id)) %>%
+    dplyr::inner_join(studies_cats, by = rlang::as_string(study_id)) %>%
     dplyr::group_by(!!!rlang::syms(cat_names)) %>%
     dplyr::summarise(
       studies = n(),
