@@ -253,7 +253,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     idx <- highest_level_name %in% highest_level_names 
     
-    if(!all(idx)) stop(dQuote(toString(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
+    if(!all(idx)) stop(toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
     
     list2plot <- lapply(highest_level_name, function(i) subset(data, eval(ss) == i))
     
