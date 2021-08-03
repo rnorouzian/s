@@ -180,7 +180,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
            
 #===============================================================================================================================
 
-meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
+meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
                       toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, main_extra_name = FALSE) 
 {
@@ -264,3 +264,97 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
 }                      
+
+#=======================================================================================================================================================
+                        
+meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
+                      structure = c("simple","typical","complex"), output_highest_level = FALSE,
+                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, main_extra_name = FALSE) 
+{
+  
+  data <- rm.colrowNA(trim_(data))
+  
+  dot_cols <- rlang::ensyms(...)
+  str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+  idx <- str_cols %in% names(data)
+  if(!all(idx)) stop(toString(dQuote(str_cols[!idx]))," not found in the 'data'.", call. = FALSE)
+  
+  ss <- substitute(highest_level)
+  sss <- deparse(ss)
+  
+  if(reset){
+    graphics.off()
+    org.par <- par(no.readonly = TRUE)
+    on.exit(par(org.par))
+  }
+  
+  data <- data %>%
+    dplyr::select({{highest_level}}, !!! dot_cols)
+  
+  if(is.null(highest_level_name)){
+    
+    struc <- match.arg(structure) 
+    
+    #====
+    hlist <- data %>%
+    dplyr::group_by({{highest_level}}) %>%
+      dplyr::mutate(grp = dplyr::across(tidyselect::all_of(str_cols), ~ {
+        tmp <- dplyr::n_distinct(.)
+        #dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, TRUE ~ 3)
+        dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp >1 & tmp < n() ~ 3,  TRUE ~ 4)
+      }) %>%
+        purrr::reduce(stringr::str_c, collapse = "")) %>%
+      dplyr::ungroup(.) %>%
+      dplyr::group_split(grp, .keep = FALSE)
+    #====
+    
+    res <- Filter(NROW, rev(hlist))
+    
+    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
+    
+    typic <- function(vec) vec[ceiling(length(vec)/2)]
+    
+    nms <- lapply(res, function(i){
+      nr <- sapply(split(i, i[[sss]]), nrow);
+      study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
+      } else if(struc == "simple") {min(as.numeric(names(table(nr))))
+      } else {max(as.numeric(names(table(nr))))};
+      names(nr)[nr == study_type][1]
+    })
+    
+    list2plot <- lapply(seq_along(res),function(i) subset(res[[i]], eval(ss) == nms[i]))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
+    
+    main <- paste(main_no., main)
+    
+    if(main_extra_name) main <- paste0(main, " [",nms,"]")
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
+    
+    if(output_highest_level) res
+    
+  } else {
+    
+    highest_level_name <- trimws(highest_level_name)
+    highest_level_names <- unique(data[[sss]])
+    
+    idx <- highest_level_name %in% highest_level_names 
+    
+    if(!all(idx)) stop(toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
+    
+    list2plot <- lapply(highest_level_name, function(i) subset(data, eval(ss) == i))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
+  }
+}                        
+                        
