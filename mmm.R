@@ -182,7 +182,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, ...){
 
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE) 
+                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, main_extra_name = FALSE) 
 {
   
   data <- rm.colrowNA(trim_(data))
@@ -237,6 +237,8 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     main <- paste(main_no., main)
     
+    if(main_extra_name) main <- paste0(main, " [",nms,"]")
+    
     invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
     
     if(output_highest_level) res
@@ -258,5 +260,4 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
-}                                                
-                      
+}               
