@@ -189,6 +189,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   
   dot_cols <- rlang::ensyms(...)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
+
+  idx <- str_cols %in% names(data)
+  if(!all(idx)) stop(toString(dQuote(str_cols[!idx]))," not found in the 'data'.", call. = FALSE)
   
   ss <- substitute(highest_level)
   sss <- deparse(ss)
@@ -260,4 +263,4 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
-}               
+}                      
