@@ -66,8 +66,8 @@ cat_overlap <- function(data, study_id, ...){
   study_id <- rlang::ensym(study_id)
   cat_mod <- rlang::ensyms(...)
   cat_nms <- purrr::map_chr(cat_mod,  ~rlang::as_string(.x))
-    
-setNames(purrr::map(cat_mod,  ~ {
+  
+  setNames(purrr::map(cat_mod,  ~ {
     
     studies_cats <- 
       data %>%
@@ -87,7 +87,8 @@ setNames(purrr::map(cat_mod,  ~ {
     studies_cats %>%
       dplyr::select(-studies, -effects) %>%
       tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
-      dplyr::rename(`Moderator Category` = cat_names[1])   
+      dplyr::rename(`Moderator Category` = cat_names[1]) %>% 
+      dplyr::select(1, order(names(.)[-1]) + 1)
     
   }), cat_nms)
 }
