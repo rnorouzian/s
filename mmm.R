@@ -65,7 +65,10 @@ cat_overlap <- function(data, study_id, ...){
   
   study_id <- rlang::ensym(study_id)
   cat_mod <- rlang::ensyms(...)
-  cat_nms <- purrr::map_chr(cat_mod,  ~rlang::as_string(.x))
+  cat_nms <- purrr::map_chr(cat_mod, rlang::as_string)
+  
+  idx <- cat_nms %in% names(data)
+  if(!all(idx)) stop(toString(dQuote(cat_nms[!idx]))," not found in the 'data'.", call. = FALSE)
   
   setNames(purrr::map(cat_mod,  ~ {
     
@@ -88,8 +91,9 @@ cat_overlap <- function(data, study_id, ...){
       dplyr::select(-studies, -effects) %>%
       tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
       dplyr::rename(`Moderator Category` = cat_names[1]) %>% 
+      dplyr::mutate(`Moderator Category` = as.character(`Moderator Category`)) %>% 
       dplyr::select(1, order(names(.)[-1]) + 1)
-    
+      
   }), cat_nms)
 }
                         
