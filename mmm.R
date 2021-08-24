@@ -87,13 +87,17 @@ cat_overlap <- function(data, study_id, ...){
         effects = sum(effects.x), .groups = 'drop') %>% 
       dplyr::mutate(n = paste0(studies, " (", effects, ")") )
     
-    studies_cats %>%
+   out1 <- studies_cats %>%
       dplyr::select(-studies, -effects) %>%
       tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
       dplyr::rename(`Moderator Category` = cat_names[1]) %>% 
       dplyr::mutate(`Moderator Category` = as.character(`Moderator Category`)) %>% 
       dplyr::select(1, order(names(.)[-1]) + 1)
-      
+   
+   out2 <- out1[-1]
+   out2[upper.tri(out2)] <- "-"
+   bind_cols(out1[1],out2)
+   
   }), cat_nms)
 }
                         
