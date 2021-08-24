@@ -61,7 +61,7 @@ pluralify_ <- function (x, keep.original = FALSE,
                                  
 #===============================================================================================================================
 
-cat_overlap <- function(data, study_id, ...){
+cat_overlap1 <- function(data, study_id, ...){
   
   study_id <- rlang::ensym(study_id)
   cat_mod <- rlang::ensyms(...)
@@ -101,7 +101,50 @@ cat_overlap <- function(data, study_id, ...){
     
   }), cat_nms)
 }
-                        
+#================================================================================================================================   
+           
+cat_overlap <- function(data, study_id, ...){
+  
+  study_id <- rlang::ensym(study_id)
+  cat_mod <- rlang::ensyms(...)
+  cat_nms <- purrr::map_chr(cat_mod, rlang::as_string)
+  
+  idx <- cat_nms %in% names(data)
+  if(!all(idx)) stop(toString(dQuote(cat_nms[!idx]))," not found in the 'data'.", call. = FALSE)
+  
+  setNames(purrr::map(cat_mod,  ~ {
+    
+    studies_cats <- 
+      data %>%
+      dplyr::group_by(!!study_id, !!.x) %>%
+      dplyr::summarise(effects = n(), .groups = 'drop')
+    nm1 <- rlang::as_string(.x)
+    cat_names <- paste0(nm1, c(".x", ".y"))
+    
+    studies_cats <- 
+      studies_cats %>%
+      dplyr::inner_join(studies_cats, by = rlang::as_string(study_id)) %>%
+      dplyr::group_by(!!!rlang::syms(cat_names)) %>%
+      dplyr::summarise(
+        studies = n(),
+        effects = sum(effects.x), .groups = 'drop') %>% 
+      dplyr::mutate(n = paste0(studies, " (", effects, ")") )
+    
+    out1 <- studies_cats %>%
+      dplyr::select(-studies, -effects) %>%        
+      tidyr::pivot_wider(names_from = cat_names[2], 
+                         values_from = n, names_sort = TRUE) %>%
+      dplyr::rename_with(~nm1,  cat_names[1]) %>%
+      dplyr::arrange(dplyr::across(tidyselect::all_of(nm1))) %>%
+      dplyr::mutate(dplyr::across(tidyselect::all_of(nm1), as.character))  
+ 
+   out2 <- out1[-1]
+   out2[upper.tri(out2)] <- "-"
+   bind_cols(out1[1],out2)
+    
+  }), cat_nms)
+}           
+           
 #================================================================================================================================
  
 pt.curve <- function(X, adjust = 1, compact = NULL, pch = 16, col = 2, cex = .7, seed = 0, reset = TRUE, add = FALSE, na.rm = TRUE, ...) {
