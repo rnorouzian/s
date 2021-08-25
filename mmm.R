@@ -411,3 +411,41 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   }
 }                        
                         
+#=====================================================================================================================================================
+                        
+latent_metareg <- function(fit, formula, group.id = c("first","second"), 
+                           tol = 1e-12, std = FALSE) 
+{
+
+  has_G <- isTRUE(fit$withG)
+  has_H <- isTRUE(fit$withH)
+  group.id <- match.arg(group.id)
+  
+  if(!has_G) stop("Model must contain at least one correlated random effect term.", call. = FALSE)
+  if(!all(fit$struct %in% c("UN", "GEN"))) stop("Model must use 'UN' or 'GEN' structures.", call. = FALSE)
+  if(group.id != "first" & !has_H) stop("No second grouping variable detected.", call. = FALSE)
+  
+  C <- if(group.id == "first") fit$G else fit$H
+  R <- stats::cov2cor(C)
+  vars <- colnames(C)
+  formula <- as.character(formula)
+  out_loc <- which(vars == formula[2])
+  pred.names <- trimws(strsplit(formula[3], "+", fixed = TRUE)[[1]])
+  pred_loc <- which(vars %in% pred.names)
+  if (tol < 1e-12) warning("Do not reduce tol, solution may not be numerically stable.")
+ 
+  if (Matrix::det(R) < tol) {
+      warning("Singular covariance matrix detected.", call. = FALSE) }
+
+  res <- array(dim = length(pred_loc))
+  
+  if (std) {
+    res <- base::solve(R[pred_loc, pred_loc], R[out_loc, pred_loc], tol = tol)
+  } else {
+    res <- base::solve(C[pred_loc, pred_loc], C[out_loc, pred_loc], tol = tol)
+  }
+
+  names(res) <- if(length(pred.names) > 1) colnames(R[pred_loc, pred_loc]) else pred.names
+  return(res)
+}                        
+                        
