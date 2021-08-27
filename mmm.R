@@ -474,4 +474,21 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE){
  
 }    
                         
-#================================================================================================================================================                        
+#================================================================================================================================================   
+                        
+needzzsf <- c('metafor', 'clubSandwich', 'rlang', 'tidyverse')      
+                        
+                        
+not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
+if(length(not.have23)) install.packages(not.have23)
+
+
+suppressWarnings(
+suppressMessages({ 
+  
+  for(i in needzzsf){
+    library(i, character.only = TRUE)
+  }
+}))
+  
+options(dplyr.summarise.inform = FALSE)                        
