@@ -183,25 +183,6 @@ pt.curve <- function(X, adjust = 1, compact = NULL, pch = 16, col = 2, cex = .7,
   }
 }             
 
-                        
-#=================================================================================================================================
-                        
-needzzsf <- c("plotrix","lexicon","tidyverse","rlang")    
-
-not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
-if(length(not.have23)) install.packages(not.have23)
-
-
-suppressWarnings(
-  suppressMessages({ 
-    
-    for(i in needzzsf){
-      library(i, character.only = TRUE)
-    }
-  }))
-
-options(dplyr.summarise.inform = FALSE)
-
 #===============================================================================================================================
                         
 #===== Hack to fix the bug in plotrix package regarding its 'showcount' argument (reported the bug to the package author as well)
@@ -476,17 +457,16 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE){
                         
 #================================================================================================================================================   
                         
-needzzsf <- c('metafor', 'clubSandwich', 'rlang', 'tidyverse')      
-                             
+needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'tidyverse')      
+
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
 
 suppressWarnings(
-suppressMessages({ 
-  
-  for(i in needzzsf){
-    library(i, character.only = TRUE)
-  }
-}))
+  suppressMessages({ 
+    
+    invisible(lapply(needzzsf, base::require, character.only = TRUE))
+    
+  }))
   
 options(dplyr.summarise.inform = FALSE)                        
