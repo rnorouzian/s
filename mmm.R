@@ -435,7 +435,8 @@ latent_metareg <- function(fit, formula, group.id = c("first","second"),
   if (tol < 1e-12) warning("Do not reduce tol, solution may not be numerically stable.")
  
   if (Matrix::det(R) < tol) {
-      warning("Singular covariance matrix detected.", call. = FALSE) }
+      warning("Singular covariance matrix detected.", call. = FALSE) 
+  }
 
   res <- array(dim = length(pred_loc))
   
@@ -449,3 +450,28 @@ latent_metareg <- function(fit, formula, group.id = c("first","second"),
   return(res)
 }                        
                         
+#================================================================================================================================================
+                        
+study_struct <- function(..., raw = FALSE, row_id = FALSE){
+  
+  dots <- rlang::list2(...) 
+  inp_ls <- purrr::map(dots, ~ purrr::map(.x, seq_len)) %>% transpose %>% 
+    purrr::map(purrr::compact)
+  
+  data_ls <- purrr::map(inp_ls, 
+                 ~ tidyr::expand_grid(!!! .x,
+                                      info. = c("control","treatment")))
+  
+ out <- if(!raw) { purrr::map2(data_ls, inp_ls, ~ .x %>% 
+         dplyr::group_by(!!! rlang::syms(names(.y))) %>%
+         dplyr::summarise(info. = stringr::str_c(sort(info., decreasing = TRUE), 
+                                                 collapse = ' vs '), .groups = 'drop'))
+ } else { data_ls }
+ 
+ res <- dplyr::bind_rows(out, .id = "study")
+ 
+ if(row_id) dplyr::bind_cols(res, row_id = seq_len(nrow(res))) else res
+ 
+}    
+                        
+#================================================================================================================================================                        
