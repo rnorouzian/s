@@ -97,7 +97,7 @@ cat_overlap1 <- function(data, study_id, ...){
     
     out2 <- out1[-1]
     out2[upper.tri(out2)] <- "-"
-    bind_cols(out1[1],out2)
+    dplyr::bind_cols(out1[1],out2)
     
   }), cat_nms)
 }
@@ -140,7 +140,7 @@ cat_overlap <- function(data, study_id, ...){
  
    out2 <- out1[-1]
    out2[upper.tri(out2)] <- "-"
-   bind_cols(out1[1],out2)
+   dplyr::bind_cols(out1[1],out2)
     
   }), cat_nms)
 }           
