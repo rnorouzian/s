@@ -144,7 +144,12 @@ cat_overlap <- function(data, study_id, ...){
     
   }), cat_nms)
 }           
+      
            
+#================================================================================================================================           
+           
+mod_for_un <- function(data,left,right) crossprod(table(data[c(right,left)])>0) 
+                      
 #================================================================================================================================
  
 pt.curve <- function(X, adjust = 1, compact = NULL, pch = 16, col = 2, cex = .7, seed = 0, reset = TRUE, add = FALSE, na.rm = TRUE, ...) {
