@@ -438,7 +438,7 @@ latent_metareg <- function(fit, formula, group.id = c("first","second"),
                         
 #================================================================================================================================================
                         
-study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed = NULL){
+study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed = NULL, comparison = TRUE){
   
   dots <- rlang::list2(...) 
   inp_ls <- purrr::map(dots, ~ purrr::map(.x, seq_len)) %>% transpose %>% 
@@ -446,27 +446,30 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed
   
   data_ls <- purrr::map(inp_ls, 
                         ~ tidyr::expand_grid(!!! .x,
-                                             info. = c("control","treatment")))
+                                             comparison = c("control","treatment")))
   
   out <- if(!raw) { purrr::map2(data_ls, inp_ls, ~ .x %>% 
                                   dplyr::group_by(!!! rlang::syms(names(.y))) %>%
-                                  dplyr::summarise(info. = stringr::str_c(sort(info., decreasing = TRUE), 
+                                  dplyr::summarise(comparison = stringr::str_c(sort(comparison, decreasing = TRUE), 
                                                                           collapse = ' vs '), .groups = 'drop'))
   } else { data_ls }
   
+  
   res <- dplyr::bind_rows(out, .id = "study")
   
+  res <- if(comparison) res else dplyr::select(res, -comparison)
+  
   res <- if(row_id) dplyr::bind_cols(res, row_id = seq_len(nrow(res))) else res
- 
+  
   if(missing){
     
-   set.seed(seed)
+    set.seed(seed)
     
-   res %>% dplyr::group_by(study) %>% 
-     dplyr::sample_n(sample(dplyr::n(), 1)) %>% 
-     dplyr::ungroup()
- 
-    } else {
+    res %>% dplyr::group_by(study) %>% 
+      dplyr::sample_n(sample(dplyr::n(), 1)) %>% 
+      dplyr::ungroup()
+    
+  } else {
     
     res
   }
