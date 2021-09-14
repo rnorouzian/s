@@ -522,7 +522,6 @@ pcohen <- function(q, pop.d = 0, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
 
 #=======================================================================================================================================
 
-
 rcohen <- function(n, pop.d = 0, n1, n2 = NA){
   
   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
@@ -530,6 +529,32 @@ rcohen <- function(n, pop.d = 0, n1, n2 = NA){
   ncp <- pop.d*sqrt(N)
   
   suppressWarnings(rt(n, df, ncp)/sqrt(N))
+}
+   
+#===============================================================================================================================================                        
+                        
+rePCA_rma <- function(fit, digits = 4){
+  
+  if(!inherits(fit, "rma.mv")) stop("Model must be 'rma.mv'.", call. = FALSE) 
+  has_G <- isTRUE(fit$withG)
+  has_H <- isTRUE(fit$withH)
+  if(!has_G) stop("Model must contain at least one correlated random effect term.", call. = FALSE)
+  
+  G <- fit$G
+  sds <- setNames(svd(chol(G))$d, colnames(G))
+ pov_G <- round(sds^2 / sum(sds^2), digits = digits)
+ G.id.name <- tail(fit$g.names, 1)
+
+if(has_H){
+    H <- fit$H
+    sds <- setNames(svd(chol(H))$d, colnames(H))
+    pov_H <- round(sds^2 / sum(sds^2), digits = digits)
+    H.id.name <- tail(fit$h.names, 1)
+  }
+ 
+ if(!has_H)
+   setNames(list(pov_G), paste("proprtion of variance:",dQuote(G.id.name))) else
+     setNames(list(pov_G, pov_H), paste("proprtion of variance:",dQuote(c(G.id.name, H.id.name))))
 }
                         
 #================================================================================================================================================   
