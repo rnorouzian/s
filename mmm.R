@@ -533,28 +533,54 @@ rcohen <- function(n, pop.d = 0, n1, n2 = NA){
    
 #===============================================================================================================================================                        
                         
-rePCA_rma <- function(fit, digits = 4){
+pca_rma <- function(fit, digits = 4, cum = TRUE){
   
   if(!inherits(fit, "rma.mv")) stop("Model must be 'rma.mv'.", call. = FALSE) 
-  has_G <- isTRUE(fit$withG)
-  has_H <- isTRUE(fit$withH)
-  if(!has_G) stop("Model must contain at least one correlated random effect term.", call. = FALSE)
+  if(is.null(fit$random)) stop("Model must contain at least one random effect term.", call. = FALSE)
   
-  G <- fit$G
-  sds <- setNames(svd(chol(G))$d, colnames(G))
- pov_G <- round(sds^2 / sum(sds^2), digits = digits)
- G.id.name <- tail(fit$g.names, 1)
-
-if(has_H){
+  has_G <- fit$withG
+  has_H <- fit$withH
+  has_S <- fit$withS
+  
+  if(has_S){
+   S <- fit$sigma2
+   S <- if(length(S) < 2) diag(S, 1, 1) else diag(S)
+   colnames(S) <- rownames(S) <- fit$s.names
+   sds <- setNames(svd(chol(S))$d, colnames(S))
+   pov_S <- round(sds^2 / sum(sds^2), digits = digits)
+   pov_S <- if(cum) cumsum(pov_S) else pov_S
+   S.id.name <- "Ave_ESs (Intercepts)"
+  }
+  
+  if(has_G){
+   G <- fit$G
+   sds <- setNames(svd(chol(G))$d, colnames(G))
+   pov_G <- round(sds^2 / sum(sds^2), digits = digits)
+   pov_G <- if(cum) cumsum(pov_G) else pov_G
+   G.id.name <- tail(fit$g.names, 1)
+  }
+  
+  if(has_H){
     H <- fit$H
     sds <- setNames(svd(chol(H))$d, colnames(H))
     pov_H <- round(sds^2 / sum(sds^2), digits = digits)
+    pov_H <- if(cum) cumsum(pov_H) else pov_H
     H.id.name <- tail(fit$h.names, 1)
   }
- 
- if(!has_H)
-   setNames(list(pov_G), paste("proprtion of variance:",dQuote(G.id.name))) else
-     setNames(list(pov_G, pov_H), paste("proprtion of variance:",dQuote(c(G.id.name, H.id.name))))
+  
+    if(has_S & !has_G)
+    setNames(list(pov_S), paste("proprtion of variance:",dQuote(S.id.name)))
+  else
+    if(has_G & !has_H & !has_S)
+    setNames(list(pov_G), paste("proprtion of variance:",dQuote(G.id.name))) 
+  else
+    if(has_G & has_H & !has_S)
+    setNames(list(pov_G, pov_H), paste("proprtion of variance:",dQuote(c(G.id.name, H.id.name))))
+  else
+    if(has_S & has_G)
+    setNames(list(pov_S, pov_G), paste("proprtion of variance:",dQuote(c(S.id.name, G.id.name))))
+  else 
+    setNames(list(pov_S, pov_G, pov_H), paste("proprtion of variance:",dQuote(c(S.id.name, G.id.name, H.id.name))))
 }
                         
 #================================================================================================================================================   
