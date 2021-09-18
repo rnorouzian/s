@@ -582,7 +582,55 @@ pca_rma <- function(fit, digits = 4, cum = TRUE){
   else 
     setNames(list(pov_S, pov_G, pov_H), paste("proprtion of variance:",dQuote(c(S.id.name, G.id.name, H.id.name))))
 }
-                        
+   
+#================================================================================================================================================
+    
+prob_treat <- function(a = NULL, legend = "topright"){
+  
+  from <- -4
+  to <- 4
+  b <- 0
+  c <- 0 
+  
+  no_a <- is.null(a)
+  
+  a <- if(no_a) c(-1e9,-.12, -.35, -.8,0) else a
+  
+  eq <- function(...){ lapply(list(...), function(x) c(x, rep(rev(x)[1], max(lengths(list(...))) - length(x)))) }
+  
+  I <- eq(a, b, c)
+  
+  a = I[[1]] ; b = I[[2]] ; c = I[[3]]
+  
+  loop <- seq_along(a)
+  
+  h <- list()
+  graphics.off()  
+  for(i in loop){
+    p <- function(x) c[i] + ((1 - c[i])/(1 + exp(-a[i]*(x - b[i]))))  
+    h[[i]] <- curve(p, from, to, add = i!= 1, n = 1e3, las = 1, ylim = 0:1,
+                    font.lab = 2, xlab = "Pre-test", xaxt = "n",
+                    type = "n", ylab = "Prob. of Treatment", mgp = c(2, .5, 0), tck = -.015)
+  }
+
+  if(!no_a) {u <- par('usr')
+     abline(h = c(0, 1, .5), col = 8, lty = c(3, 3, 2))}
+  
+  axis(1, at = 0, labels = "Mean (cut-off)", mgp = c(2, .2, 0), tck = -.015)
+  axis(2, at = .5, col = 2, col.axis = 2, mgp = c(2, .5, 0), tck = -.015, las = 1)
+  
+  for(i in loop){
+    lines(h[[i]], col = i, lwd = 2)
+   # segments(b[i], u[3], b[i], .5, col = i, lty = 3)  
+    points(b[i], .5, pch = 21, col = i, font = 2, cex = 1.5, bg = "cyan", lwd = 2)
+  }
+  
+ if(no_a) legend(legend, c("RD Design","NEGD: Near RD", "NEGD: Bet. RD & RE", "NEGD: Near RE","RE"), 
+         lty = 1, pt.bg = loop, col = c(1,4,3,2,5), cex = .7, pt.cex = .6, 
+         bg = 0, box.col = 0, x.intersp = .5)
+  box()
+}        
+    
 #================================================================================================================================================   
                         
 needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'tidyverse')      
