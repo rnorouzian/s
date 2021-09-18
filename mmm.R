@@ -630,7 +630,31 @@ prob_treat <- function(a = NULL, legend = "topright"){
          bg = 0, box.col = 0, x.intersp = .5)
   box()
 }        
-    
+
+#================================================================================================================================================
+                              
+num2fac <- function(data, ..., caps = FALSE, reverse = FALSE){
+  
+  var_ls <- purrr::map(rlang::ensyms(..., .named = TRUE), as.character)
+  l_varls <- length(var_ls) 
+  
+  if(l_varls != length(caps)) {
+    caps <- rep(caps, l_varls)
+  }
+  if(l_varls != length(reverse)) {
+    reverse <- rep(reverse, l_varls)
+  }
+  
+  let <- ifelse(caps, list(base::LETTERS), list(base::letters))
+  names(let) <- names(var_ls)
+  FUN <- ifelse(reverse, list(utils::tail), list(utils::head))
+  names(FUN) <- names(var_ls)
+  
+  dplyr::mutate(data,
+         purrr::map_dfc(var_ls,
+                        ~ factor(FUN[[.x]](let[[.x]],max(data[[.x]]))[data[[.x]]])))
+}                              
+                              
 #================================================================================================================================================   
                         
 needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'tidyverse')      
