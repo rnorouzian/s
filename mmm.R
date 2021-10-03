@@ -703,7 +703,36 @@ do_context <- function(data, context_vars, group_id){
   
   return(data)
 }
-                              
+     
+                               
+#================================================================================================================================================                               
+                               
+mask <- function(data, what, full = FALSE){
+  
+  data[] <- lapply(data, function(x) type.convert(as.character(x), as.is = TRUE))
+  
+  f1 <- function(x) as.numeric(factor(x, levels = unique(x)))
+  f2 <- function(x) {
+    temp <- substr(x, 1, 1)
+    paste0(temp, ave(x, temp, FUN = function(y) match(y, unique(y))))
+  }
+  cols <- names(data)[sapply(data, is.numeric)]
+  num.cols <- cols[cols %in% what]
+  cols <- names(data)[sapply(data, is.character)]
+  char.cols <- cols[cols %in% what]
+  
+  if(!full){
+    
+    if(length(num.cols))  data[num.cols] <- lapply(data[num.cols], f1)
+    if(length(char.cols)) data[char.cols] <- lapply(data[char.cols], f2)
+    
+  }else{
+    
+    data[what] <- lapply(data[what], f1)
+  }
+  return(data)
+}  
+                     
 #================================================================================================================================================   
                         
 needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
