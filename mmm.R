@@ -732,6 +732,30 @@ mask <- function(data, what, full = FALSE){
   }
   return(data)
 }  
+
+                     
+#================================================================================================================================================
+                     
+is_nestor <- function(data, ...){
+  
+  dot_cols <- rlang::ensyms(...)
+  IDs <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+  if(length(unique(IDs)) < 2) stop("At least 2 ID variables required.", call. = FALSE)
+  
+ data <- na.omit(data)
+ 
+is_nest <- function(data, nestor, nested){
+
+f <- function(data, nesto, neste){
+groupings <- tapply(data[[nesto]], data[[neste]], function(x) length(unique(x)))
+all(groupings == 1L)
+}
+setNames(sapply(nested, function(i)f(data=data, nestor, i)), nested)
+}
+
+setNames(lapply(seq_along(IDs), function(i) is_nest(data, IDs[i], IDs[-i])), IDs)
+}                     
                      
 #================================================================================================================================================   
                         
