@@ -772,7 +772,7 @@ setNames(lapply(what, function(i) f(data, i)), what)
 
 #================================================================================================================================================
                 
-winsor_tukey <- function(data, yi){
+winsor_tukey <- function(data, yi, coef = 3){
 
 yi <- deparse(substitute(yi))
 
@@ -780,8 +780,8 @@ first_third_QR <- fivenum(data[[yi]], na.rm = TRUE)[c(2,4)]
 
 inter_QR <- diff(first_third_QR)
 
-Tukey_min <- first_third_QR[1] - (3 * inter_QR )
-Tukey_max <- first_third_QR[2] + (3 * inter_QR )
+Tukey_min <- first_third_QR[1] - (coef * inter_QR )
+Tukey_max <- first_third_QR[2] + (coef * inter_QR )
 
 ind1 <- data[[yi]] < Tukey_min
 ind2 <- data[[yi]] > Tukey_max
