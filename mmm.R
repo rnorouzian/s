@@ -756,7 +756,20 @@ setNames(sapply(nested, function(i)f(data=data, nestor, i)), nested)
 
 setNames(lapply(seq_along(IDs), function(i) is_nest(data, IDs[i], IDs[-i])), IDs)
 }                     
-                     
+    
+#================================================================================================================================================
+                
+mod_levels <- function(data, ...){
+  
+  dot_cols <- rlang::ensyms(...)
+  what <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+f <- function(dat, wht){
+sort(unique(na.omit(unlist(dat[wht]))))
+}
+setNames(lapply(what, function(i) f(data, i)), what)
+}                
+                
 #================================================================================================================================================   
                         
 needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
