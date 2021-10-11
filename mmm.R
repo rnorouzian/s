@@ -444,6 +444,8 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed
   inp_ls <- purrr::map(dots, ~ purrr::map(.x, seq_len)) %>% transpose %>% 
     purrr::map(purrr::compact)
   
+  high_name <- names(dots)[1]
+  
   data_ls <- purrr::map(inp_ls, 
                         ~ tidyr::expand_grid(!!! .x,
                                              comparison = c("control","treatment")))
@@ -451,11 +453,10 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed
   out <- if(!raw) { purrr::map2(data_ls, inp_ls, ~ .x %>% 
                                   dplyr::group_by(!!! rlang::syms(names(.y))) %>%
                                   dplyr::summarise(comparison = stringr::str_c(sort(comparison, decreasing = TRUE), 
-                                                                          collapse = ' vs '), .groups = 'drop'))
+                                                                               collapse = ' vs '), .groups = 'drop'))
   } else { data_ls }
   
-  
-  res <- dplyr::bind_rows(out, .id = "study")
+  res <- dplyr::bind_rows(out)
   
   res <- if(comparison) res else dplyr::select(res, -comparison)
   
@@ -465,15 +466,15 @@ study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed
     
     set.seed(seed)
     
-    res %>% dplyr::group_by(study) %>% 
+    res %>% dplyr::group_by(!!!rlang::syms(high_name)) %>% 
       dplyr::sample_n(sample(dplyr::n(), 1)) %>% 
       dplyr::ungroup()
     
   } else {
     
-    res
+   res
   }
-}    
+} 
       
 #===============================================================================================================================================
                      
