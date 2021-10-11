@@ -438,7 +438,7 @@ latent_metareg <- function(fit, formula, group.id = c("first","second"),
                         
 #================================================================================================================================================
                         
-study_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed = NULL, comparison = TRUE){
+meta_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed = NULL, comparison = TRUE){
   
   dots <- rlang::list2(...) 
   inp_ls <- purrr::map(dots, ~ purrr::map(.x, seq_len)) %>% transpose %>% 
