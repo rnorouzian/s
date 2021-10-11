@@ -472,7 +472,7 @@ meta_struct <- function(..., raw = FALSE, row_id = FALSE, missing = FALSE, seed 
     
   } else {
     
-   res
+   as.data.frame(res)
   }
 } 
       
