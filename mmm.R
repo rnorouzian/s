@@ -800,80 +800,85 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
                                 whisker_coef = 3, cex_text_outlier = .6,
                                 cex_main = .9, parallel = "snow", ncpus = 4, 
                                 reestimate = FALSE, save = TRUE){
-
-# Check Hat values (weight-leveraging effects)
-hat <- hatvalues.rma.mv(fit)
-
-if(is.null(cook)){
   
-  cook <- cooks.distance.rma.mv(fit, progbar=TRUE,
-                             parallel = parallel, 
-                             ncpus = ncpus, 
-                             reestimate = reestimate)
+  # Check Hat values (weight-leveraging effects)
+  hat <- hatvalues.rma.mv(fit)
   
-  if(save){
-  saveRDS(x, "cooks_fun.rds")
+  if(is.null(cook)){
     
-  message("\nNote: Check folder '", basename(getwd()),"' for the 'cooks_fun.rds' files.\n") 
+    cook <- cooks.distance.rma.mv(fit, progbar=TRUE,
+                                  parallel = parallel, 
+                                  ncpus = ncpus, 
+                                  reestimate = reestimate)
     
+    if(save){
+      saveRDS(x, "cooks_fun.rds")
+      
+      message("\nNote: Check folder '", basename(getwd()),"' for the 'cooks_fun.rds' files.\n") 
+      
+    }
   }
-}
-
-if(is.null(st_del_res_z)){
   
-  st_del_res_z <- rstudent.rma.mv(fit, progbar=TRUE,
-                        parallel = parallel, 
-                        ncpus = ncpus, 
-                        reestimate = reestimate)$z
+  if(is.null(st_del_res_z)){
+    
+    st_del_res_z <- rstudent.rma.mv(fit, progbar=TRUE,
+                                    parallel = parallel, 
+                                    ncpus = ncpus, 
+                                    reestimate = reestimate)$z
+    
+    if(save){
+      saveRDS(st_del_res_z, "rstudent_fun.rds")
+      
+      message("\nNote: Check folder '", basename(getwd()),"' for the 'rstudent_fun.rds' files.\n") 
+      
+    }
+  }
   
-   if(save){
-   saveRDS(st_del_res_z, "rstudent_fun.rds")
-     
-     message("\nNote: Check folder '", basename(getwd()),"' for the 'rstudent_fun.rds' files.\n") 
-     
-   }
-}
-
-# Make visual size of effects proportional to their cook's distance (estimate influence)
-cex <- cex_add_cook+cex_multi_cook*sqrt(cook)
-
-# Plot Leverage against Studentized residuals proportioned on cook's distances
-plot(hat, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
-     xlab="Leverage (Hat Value)", 
-     ylab="Outlier (Standardized Del. Value)",pch=19,cex.axis = .9,tcl = -.3)
-title("Size of points denote \nestimate-influencing effects\n (Cook's distances)", 
-      cex.main = cex_main, line = .3)
-
-outlier_limits <- qnorm(c(.025,.5,.975))
-
-abline(h=outlier_limits, lty=c(3,1,3), lwd=c(1,2,1))
-
-max_hat <- boxplot.default(hat,range=whisker_coef,add=TRUE,horizontal=TRUE,axes=FALSE,outline=FALSE)$stats[5,]
-
-max_cook <- boxplot.stats(cook, coef = whisker_coef)$stats[5]
-
-abline(v = max_hat, col=2)
-
-# To be outlier, an estimate must simultaneously (a) be outlying (per studentized value)
-# (b) have high leverage (hat value), and (c) high model influence (cook's distance)
-
-i <- abs(st_del_res_z) > outlier_limits[3]  
-j <- hat > max_hat
-k <- cook > max_cook
-L <- which(i & j & k)
-
-if(length(L)==0) return(NA)
-
-u <- par()$usr
-
-if(any(st_del_res_z[L]>0))rect(max_hat, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
-if(any(st_del_res_z[L]<0))rect(max_hat, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
-
-# Show which effects meet all the three conditions
-text(hat[L], st_del_res_z[L], labels = names(L), pos = 4, col = "magenta", cex = cex_text_outlier)
-points(hat[L], st_del_res_z[L], cex=cex[L])
-
-return(as.numeric(names(L)))
+  # Make visual size of effects proportional to their cook's distance (estimate influence)
+  cex <- cex_add_cook+cex_multi_cook*sqrt(cook)
+  
+  # Plot Leverage against Studentized residuals proportioned on cook's distances
+  plot(hat, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
+       xlab="Leverage (Hat Value)", 
+       ylab="Outlier (Standard Del. Value)",pch=19,cex.axis = .9,tcl = -.3)
+  title("Size of points denote \nestimate-influencing effects\n (Cook's distances)", 
+        cex.main = cex_main, line = .3)
+  
+  outlier_limits <- qnorm(c(.025,.5,.975))
+  
+  abline(h=outlier_limits, lty=c(3,1,3), lwd=c(1,2,1))
+  
+  max_hat <- boxplot.default(hat,range=whisker_coef,add=TRUE,horizontal=TRUE,axes=FALSE,outline=FALSE)$stats[5,]
+  
+  max_cook <- boxplot.stats(cook, coef = whisker_coef)$stats[5]
+  
+  abline(v = max_hat, col=2)
+  
+  # To be outlier, an estimate must simultaneously (a) be outlying (per studentized value)
+  # (b) have high leverage (hat value), and (c) high model influence (cook's distance)
+  
+  i <- abs(st_del_res_z) > outlier_limits[3]  
+  j <- hat > max_hat
+  k <- cook > max_cook
+  L <- which(i & j & k)
+  
+  if(length(L)==0) { 
+    
+  message("Note: No interactive outlier detected.") 
+  
+  return(NA)
+  }
+  
+  u <- par()$usr
+  
+  if(any(st_del_res_z[L]>0))rect(max_hat, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
+  if(any(st_del_res_z[L]<0))rect(max_hat, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
+  
+  # Show which effects meet all the three conditions
+  text(hat[L], st_del_res_z[L], labels = names(L), pos = 4, col = "magenta", cex = cex_text_outlier)
+  points(hat[L], st_del_res_z[L], cex=cex[L])
+  
+  return(as.numeric(names(L)))
 }                
                 
 #=================================================================================================================================================                
