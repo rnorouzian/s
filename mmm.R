@@ -796,8 +796,8 @@ return(data)
 #================================================================================================================================================   
   
 interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL, 
-                                cex_add_cook = .5, cex_multi_cook = 6,
-                                whisker_coef = 3, cex_text_outlier = .6,
+                                cex_add_cook = .5, cex_multi_cook = 5,
+                                whisker_coef = 2.5, cex_text_outlier = .6,
                                 cex_main = .9, parallel = "snow", ncpus = 4, 
                                 reestimate = FALSE, save = TRUE){
   
@@ -864,20 +864,21 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   
   if(length(L)==0) { 
     
-  message("Note: No interactive outlier detected.") 
-  
-  return(NA)
+    message("Note: No interactive outlier detected.") 
+    
+    return(NA)
   }
   
   u <- par()$usr
   
-  if(any(st_del_res_z[L]>0))rect(max_hat, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
-  if(any(st_del_res_z[L]<0))rect(max_hat, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
+  if(any(st_del_res_z[L]>0)) rect(max_hat, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
+  if(any(st_del_res_z[L]<0)) rect(max_hat, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
   
   # Show which effects meet all the three conditions
   text(hat[L], st_del_res_z[L], labels = names(L), pos = 4, col = "magenta", cex = cex_text_outlier)
   points(hat[L], st_del_res_z[L], cex=cex[L])
   
+  message("Note: The row numbers for outliers belong to the model-cleaned data.")
   return(as.numeric(names(L)))
 }                
                 
