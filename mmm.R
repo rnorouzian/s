@@ -814,7 +814,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
     if(save){
       saveRDS(x, "cooks_fun.rds")
       
-      message("\nNote: Check folder '", basename(getwd()),"' for the 'cooks_fun.rds' files.\n") 
+      message("\nNote: Check folder '", basename(getwd()),"' for the 'cooks_fun.rds' file.\n") 
       
     }
   }
@@ -829,7 +829,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
     if(save){
       saveRDS(st_del_res_z, "rstudent_fun.rds")
       
-      message("\nNote: Check folder '", basename(getwd()),"' for the 'rstudent_fun.rds' files.\n") 
+      message("\nNote: Check folder '", basename(getwd()),"' for the 'rstudent_fun.rds' file.\n") 
       
     }
   }
