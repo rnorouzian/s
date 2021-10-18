@@ -796,10 +796,18 @@ return(data)
 #================================================================================================================================================   
   
 interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL, 
-                                cex_add_cook = .5, cex_multi_cook = 5,
+                                cex_add_point = .5, cex_multi_point = 6,
                                 whisker_coef = 2.5, cex_text_outlier = .6,
                                 cex_main = .9, parallel = "snow", ncpus = 4, 
-                                reestimate = FALSE, save = TRUE){
+                                reestimate = FALSE, save = FALSE, 
+                                file_name_cook = "cooks1",
+                                file_name_res_z = "rstudent1",
+                                view = 1, pos = 2){
+  
+  
+  datziola <- clubSandwich:::getData(fit) %>%
+  mutate(obsss = row_number())
+  
   
   # Check Hat values (weight-leveraging effects)
   hat <- hatvalues.rma.mv(fit)
@@ -812,10 +820,11 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
                                   reestimate = reestimate)
     
     if(save){
-      saveRDS(x, "cooks_fun.rds")
       
-      message("\nNote: Check folder '", basename(getwd()),"' for the 'cooks_fun.rds' file.\n") 
+      filenm <- paste0(file_name_cook,".rds")
+      saveRDS(x, filenm)
       
+      message("\nNote: Check folder '", basename(getwd()),"' for the", dQuote(filenm),"file.\n") 
     }
   }
   
@@ -827,32 +836,35 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
                                     reestimate = reestimate)$z
     
     if(save){
-      saveRDS(st_del_res_z, "rstudent_fun.rds")
       
-      message("\nNote: Check folder '", basename(getwd()),"' for the 'rstudent_fun.rds' file.\n") 
+      filenm <- paste0(file_name_res_z,".rds")
+      saveRDS(st_del_res_z, filenm)
       
+      message("\nNote: Check folder '", basename(getwd()),"' for the", dQuote(filenm),"file.\n") 
     }
   }
   
   # Make visual size of effects proportional to their cook's distance (estimate influence)
-  cex <- cex_add_cook+cex_multi_cook*sqrt(cook)
+  cex <- cex_add_point+cex_multi_point*sqrt(if(view == 1)cook else hat)
   
   # Plot Leverage against Studentized residuals proportioned on cook's distances
-  plot(hat, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
-       xlab="Leverage (Hat Value)", 
-       ylab="Outlier (Standard Del. Value)",pch=19,cex.axis = .9,tcl = -.3)
-  title("Size of points denote \nestimate-influencing effects\n (Cook's distances)", 
+  plot(if(view == 1) hat else cook, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
+       xlab=if(view == 1) "Leverage (Hat Value)" else "Effect Influence (Cook's Dis.)", 
+       ylab="Outlier (Studentized Del. Value)",pch=19,cex.axis = .9,tcl = -.3,
+       col = adjustcolor(1, .5))
+  title(if(view == 1) "Size of points denote \nestimate-influencing effects\n (Cook's distances)" 
+        else "Size of points denote \nleverage effects\n (Hat value)", 
         cex.main = cex_main, line = .3)
   
   outlier_limits <- qnorm(c(.025,.5,.975))
   
   abline(h=outlier_limits, lty=c(3,1,3), lwd=c(1,2,1))
   
-  max_hat <- boxplot.default(hat,range=whisker_coef,add=TRUE,horizontal=TRUE,axes=FALSE,outline=FALSE)$stats[5,]
+  max_hat <- max(mean(range(hat)), boxplot.stats(hat, coef = whisker_coef)$stats[5])
   
-  max_cook <- boxplot.stats(cook, coef = whisker_coef)$stats[5]
+  max_cook <- max(mean(range(cook)), boxplot.stats(cook, coef = whisker_coef)$stats[5])
   
-  abline(v = max_hat, col=2)
+  if(view == 1) abline(v = max_hat, col=2) else abline(v = max_cook, col=2)
   
   # To be outlier, an estimate must simultaneously (a) be outlying (per studentized value)
   # (b) have high leverage (hat value), and (c) high model influence (cook's distance)
@@ -871,16 +883,21 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   
   u <- par()$usr
   
-  if(any(st_del_res_z[L]>0)) rect(max_hat, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
-  if(any(st_del_res_z[L]<0)) rect(max_hat, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
+  if(any(st_del_res_z[L]>0)) rect(if(view == 1) max_hat else max_cook, outlier_limits[3], u[2], u[4], col = adjustcolor(2, .2), border = NA)
+  if(any(st_del_res_z[L]<0)) rect(if(view == 1) max_hat else max_cook, outlier_limits[1], u[2], u[3], col = adjustcolor(2, .2), border = NA)
   
   # Show which effects meet all the three conditions
-  text(hat[L], st_del_res_z[L], labels = names(L), pos = 4, col = "magenta", cex = cex_text_outlier)
-  points(hat[L], st_del_res_z[L], cex=cex[L])
+  text(if(view == 1) hat[L] else cook[L], st_del_res_z[L], labels = names(L), pos = pos, col = "magenta", cex = cex_text_outlier, xpd = NA)
+  points(if(view == 1) hat[L] else cook[L], st_del_res_z[L], cex=cex[L])
   
-  message("Note: The row numbers for outliers belong to the model-cleaned data.")
-  return(as.numeric(names(L)))
-}                
+  LL <- as.numeric(names(L))
+  
+  removed <- filter(datziola, obsss %in% LL)
+  new_data <- filter(datziola, !obsss %in% LL)
+  
+  return(list(removed = removed, 
+              new_data = new_data))
+}   
 
 #=================================================================================================================================================
                 
