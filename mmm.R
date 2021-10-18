@@ -881,6 +881,31 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   message("Note: The row numbers for outliers belong to the model-cleaned data.")
   return(as.numeric(names(L)))
 }                
+
+#=================================================================================================================================================
+                
+maxs <- function(xx, ns){
+
+f <- function(x, n){
+  
+  len <- length(x)
+  x[x == sort(x, partial = len-n+1)[len-n+1]]
+}
+
+sapply(seq_len(ns), function(i) f(xx, i))
+}
+
+
+#================================================================================================================================================================
+
+mins <- function(xx, ns){
+  
+ f <- function(x, n){
+  
+  sort(x)[n]
+}                          
+ sapply(seq_len(ns), function(i) f(xx, i))
+}                
                 
 #=================================================================================================================================================                
                 
