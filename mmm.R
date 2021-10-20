@@ -923,7 +923,116 @@ mins <- function(xx, ns){
 }                          
  sapply(seq_len(ns), function(i) f(xx, i))
 }                
-                
+
+        
+pair_list_ <- function(data, groups) {
+  
+  unique_counts <- table(data[[groups]])
+  single_count <- names(unique_counts[unique_counts == 1])
+  
+  if(length(single_count)) {
+    message(sprintf('Note: %s %s with one row, was excluded.', groups, toString(single_count)))
+  }
+  multiple_count <- names(unique_counts[unique_counts > 1])
+  
+  lst <- combn(multiple_count, 2, function(x) {
+    data[data[[groups]] %in% x, ]
+  }, simplify = FALSE)  
+
+return(lst)
+}
+
+#=================================================================================================================================================
+
+DEF <- function(observations, groups, nested = TRUE){
+
+  if(nested){
+  icc <- ICC::ICCbare(groups, observations)
+  
+  nObs <- tapply(observations, groups, length)
+  
+  (mean(nObs) - 1) * icc + 1
+  } else 1
+}
+
+#=================================================================================================================================================
+
+RR_ <- function(observations, groups, 
+                ref_group = NULL, conf_level = 0.95, 
+                bias_adjust = TRUE, raw = TRUE, 
+                DEF = 1) 
+{
+  
+  groups <- factor(groups)
+  treat_level <- levels(groups)[(ref_group != levels(groups))]
+  level_labs <- c(ref_group, treat_level)
+  
+  nObs <- table(groups)[level_labs]
+  means <- tapply(observations, groups, base::mean)[level_labs]
+  variances <- tapply(observations, groups, stats::var)[level_labs]
+  
+  if (!all(means > 0)) 
+    stop("The mean of one or both groups is at the floor of 0.", call. = FALSE)
+  if (bias_adjust == TRUE) {
+    BC <- log(means) - variances/(2 * nObs * means^2)
+    lRR <- as.numeric(BC[2] - BC[1])
+  }
+  else {
+    lRR <- log(means[2]) - log(means[1])
+  }
+  
+  V_lRR <- sum(variances/(nObs * means^2))
+  
+  percent_dif <- 100*(exp(lRR)-1)
+  
+    V_lRR <- DEF * V_lRR
+    
+  CI <- lRR + c(-1, 1) * stats::qnorm(1 - (1 - conf_level)/2)*sqrt(V_lRR)
+  
+  row_names <- paste(treat_level,ref_group, sep="/")
+  
+  if (raw) {
+    return(data.frame(RR = exp(lRR), percent_dif = percent_dif, 
+                      CI_lower = exp(CI[1]), CI_upper = exp(CI[2]), 
+                      row.names = row_names))
+  }
+  else {
+    return(data.frame(LRR = lRR, percent_dif = percent_dif, 
+                      SE = sqrt(V_lRR), CI_lower = CI[1], CI_upper = CI[2], 
+                      row.names = row_names))
+  }
+}
+
+#=================================================================================================================================================
+
+response_ratio <- function(data, observations, groups, 
+                           nested = FALSE, raw = TRUE,
+                           bias_adjust = TRUE,
+                           conf_level = 0.95){
+
+  data <- rm.colrowNA(trim_(data))
+  data_na_rm <- na.omit(data)
+  
+  if(nrow(data_na_rm) != nrow(data)) message("Note: Rows with missing values were excluded.")
+  
+  data <- data_na_rm  
+  
+observations <- deparse(substitute(observations))
+groups <- deparse(substitute(groups))
+
+def <- with(data, DEF(observations, groups, nested = nested))
+
+lstt <- pair_list_(data, groups)
+
+map_dfr(lstt, function(i) 
+  map_dfr(1:2, function(j) 
+    RR_(i[[observations]], i[[groups]], 
+        ref_group = as.vector(unique(i[[groups]]))[j],
+        DEF = def, raw = raw, bias_adjust = bias_adjust,
+        conf_level = conf_level)))
+
+}
+
 #=================================================================================================================================================                
                 
 needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
