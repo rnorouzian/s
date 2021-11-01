@@ -311,7 +311,8 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
                       toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, main_extra_name = FALSE) 
 {
   
-  data <- rm.colrowNA(trim_(data))
+  data <- rm.colrowNA(trim_(data)) %>%
+    mutate(row_id = row_number())
   
   dot_cols <- rlang::ensyms(...)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
@@ -335,18 +336,18 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     struc <- match.arg(structure) 
     
-    #====
+
     hlist <- data %>%
-    dplyr::group_by({{highest_level}}) %>%
+      dplyr::group_by({{highest_level}}) %>%
       dplyr::mutate(grp = dplyr::across(tidyselect::all_of(str_cols), ~ {
         tmp <- dplyr::n_distinct(.)
         #dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, TRUE ~ 3)
-        dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp >1 & tmp < n() ~ 3,  TRUE ~ 4)
+         dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp > 1 & tmp < n() ~ 3,  TRUE ~ 4)
       }) %>%
         purrr::reduce(stringr::str_c, collapse = "")) %>%
       dplyr::ungroup(.) %>%
       dplyr::group_split(grp, .keep = FALSE)
-    #====
+
     
     res <- Filter(NROW, rev(hlist))
     
@@ -395,7 +396,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
-}                        
+}                   
                         
 #=====================================================================================================================================================
                         
