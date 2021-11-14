@@ -948,7 +948,7 @@ return(lst)
 DEF <- function(observations, groups, nested = TRUE){
 
   if(nested){
-  icc <- ICC::ICCbare(groups, observations)
+  icc <- ICC::ICCbare(as.factor(groups), observations)
   
   nObs <- tapply(observations, groups, length)
   
