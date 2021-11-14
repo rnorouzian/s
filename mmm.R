@@ -1021,7 +1021,7 @@ response_ratio <- function(data, observations, groups,
 observations <- deparse(substitute(observations))
 groups <- deparse(substitute(groups))
 
-def <- with(data, DEF(observations, groups, nested = nested))
+def <- DEF(data[[observations]], data[[groups]], nested = nested)
 
 lstt <- pair_list_(data, groups)
 
