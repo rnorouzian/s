@@ -1034,9 +1034,87 @@ map_dfr(lstt, function(i)
 
 }
 
+#=================================================================================================================================================
+          
+fixed_form_rma <- function(fit){ 
+   
+  a <- fit$formula.yi
+  b <- fit$formula.mods
+  
+   if(!is.null(a) & !is.null(b)) a 
+  else if(!is.null(a) & is.null(b)) a
+  else if(is.null(a) & !is.null(b)) b
+}
+   
 #=================================================================================================================================================                
-                
-needzzsf <- c('metafor', 'clubSandwich', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
+    
+plot.efflist <- function (x, selection, rows, cols, graphics = TRUE, 
+                          lattice, rug = FALSE, multiline = TRUE, ...) 
+{
+   lattice <- if (missing(lattice)) 
+      list()
+   else lattice
+   if (!missing(selection)) {
+      if (is.character(selection)) 
+         selection <- gsub(" ", "", selection)
+      pp <- plot(x[[selection]], lattice = lattice, rug = rug, multiline=multiline, ...)
+      pp$x.scales$tck=c(1,0)
+      pp$y.scales$tck=c(1,0)
+      return(pp)
+   }
+   effects <- gsub(":", "*", names(x))
+   neffects <- length(x)
+   mfrow <- mfrow(neffects)
+   if (missing(rows) || missing(cols)) {
+      rows <- mfrow[1]
+      cols <- mfrow[2]
+   }
+   for (i in 1:rows) {
+      for (j in 1:cols) {
+         if ((i - 1) * cols + j > neffects) 
+            break
+         more <- !((i - 1) * cols + j == neffects)
+         lattice[["array"]] <- list(row = i, col = j, 
+                                    nrow = rows, ncol = cols, more = more)
+         pp <- plot(x[[(i - 1) * cols + j]], lattice = lattice, rug = rug, multiline = multiline,
+                    ...)
+         # hack to turn off opposite side tick marks
+         pp$x.scales$tck=c(1,0)
+         pp$y.scales$tck=c(1,0)
+         print(pp)
+      }
+   }
+}
+environment(plot.efflist) <- asNamespace("effects")
+  
+  
+#=================================================================================================================================================                
+   
+plot_rma_effect <- function(fit, multiline=TRUE, main=NA, ..., dots=FALSE) 
+   {
+   
+if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
+   
+data_. <- eval(fit$call$data)
+form_. <- fixed_form_rma(fit)
+environment(form_.) <- environment()
+
+fit2 <- nlme::gls(form_., data = data_.)
+
+fit2$call$model <- fixed_form_rma(fit)
+fit2$call$data <- data_.
+
+fit2$coefficients <- unlist(data.frame(t(fit$b))) 
+fit2$varBeta <- fit$vb
+
+plot(allEffects(fit2, ...), multiline=multiline, main=main)
+
+if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
+}  
+  
+#=================================================================================================================================================                
+  
+needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
