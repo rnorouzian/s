@@ -1097,11 +1097,10 @@ if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rm
    
 data_. <- eval(fit$call$data)
 form_. <- fixed_form_rma(fit)
-environment(form_.) <- environment()
 
 fit2 <- nlme::gls(form_., data = data_.)
 
-fit2$call$model <- fixed_form_rma(fit)
+fit2$call$model <- form_.
 fit2$call$data <- data_.
 
 fit2$coefficients <- unlist(data.frame(t(fit$b))) 
