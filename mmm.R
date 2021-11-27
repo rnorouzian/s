@@ -1040,10 +1040,11 @@ fixed_form_rma <- function(fit){
    
   a <- fit$formula.yi
   b <- fit$formula.mods
+  y <- fit$call$yi
   
    if(!is.null(a) & !is.null(b)) a 
   else if(!is.null(a) & is.null(b)) a
-  else if(is.null(a) & !is.null(b)) b
+  else if(is.null(a) & !is.null(b)) as.formula(paste(as.character(y), paste(as.character(b), collapse = "")))
 }
    
 #=================================================================================================================================================                
