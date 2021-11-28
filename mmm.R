@@ -1116,16 +1116,15 @@ x.var <- if(is.null(x.var)) x$x.var else x.var
 
 if(!is.null(index)) x <- x[[index[1]]]
  
-#xcv <- 
-  plot(x, multiline=multiline, main=main, rug=FALSE,
+xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
        confint=confint, x.var=x.var, key.args=key.args)
 
-#xcv$x.scales$tck=c(1,0)
-#xcv$y.scales$tck=c(1,0)
+xcv$x.scales$tck=c(1,0)
+xcv$y.scales$tck=c(1,0)
 
-#print(xcv)
+print(xcv)
 
-#if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
+if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
 }  
   
 #=================================================================================================================================================                                
