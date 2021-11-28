@@ -1049,63 +1049,6 @@ fixed_form_rma <- function(fit){
 
 #=================================================================================================================================================  
 
-plot_rma_effect <- function(fit, multiline=TRUE, dots=FALSE,
-                            confint = list(style="auto"), x.var=NULL, 
-                            key.args= list(space="top"), main=NA,
-                            index=NULL, ...) 
-   {
-   
-if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
-   
-data_. <- eval(fit$call$data)
-form_. <- fixed_form_rma(fit)
-
-fit2 <- nlme::gls(form_., data = data_.)
-
-fit2$call$model <- form_.
-fit2$call$data <- data_.
-
-fit2$coefficients <- unlist(data.frame(t(fit$b))) 
-fit2$varBeta <- fit$vb
-
-x <- allEffects(fit2, ...)
-
-x.var <- if(is.null(x.var)) x$x.var else x.var
-
-if(!is.null(index)) x <- x[[index[1]]]
- 
-xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
-       confint=confint, x.var=x.var, key.args=key.args)
-
-xcv$x.scales$tck=c(1,0)
-xcv$y.scales$tck=c(1,0)
-
-print(xcv)
-
-if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
-}  
-  
-#=================================================================================================================================================                                
-  
-needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
-
-not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
-if(length(not.have23)) install.packages(not.have23)
-
-suppressWarnings(
-  suppressMessages({ 
-    
-    invisible(lapply(needzzsf, base::require, character.only = TRUE))
-    
-  }))
-  
-options(dplyr.summarise.inform = FALSE)                        
-
-  
-#======================================================================================================================================================
-  
-tick_off <- function(){
-   
 plot.efflist <- function (x, selection, rows, cols, graphics = TRUE, 
                           lattice, rug = FALSE, multiline = TRUE, ...) 
 {
@@ -1144,6 +1087,63 @@ plot.efflist <- function (x, selection, rows, cols, graphics = TRUE,
    }
 }
 environment(plot.efflist) <- asNamespace("effects")
-}  
   
 #======================================================================================================================================================  
+  
+  
+plot_rma_effect <- function(fit, multiline=TRUE, dots=FALSE,
+                            confint = list(style="auto"), x.var=NULL, 
+                            key.args= list(space="top"), main=NA,
+                            index=NULL, ...) 
+   {
+   
+if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
+   
+data_. <- eval(fit$call$data)
+form_. <- fixed_form_rma(fit)
+
+fit2 <- nlme::gls(form_., data = data_.)
+
+fit2$call$model <- form_.
+fit2$call$data <- data_.
+
+fit2$coefficients <- unlist(data.frame(t(fit$b))) 
+fit2$varBeta <- fit$vb
+
+x <- allEffects(fit2, ...)
+
+x.var <- if(is.null(x.var)) x$x.var else x.var
+
+if(!is.null(index)) x <- x[[index[1]]]
+ 
+#xcv <- 
+  plot(x, multiline=multiline, main=main, rug=FALSE,
+       confint=confint, x.var=x.var, key.args=key.args)
+
+#xcv$x.scales$tck=c(1,0)
+#xcv$y.scales$tck=c(1,0)
+
+#print(xcv)
+
+#if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
+}  
+  
+#=================================================================================================================================================                                
+  
+needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
+
+not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
+if(length(not.have23)) install.packages(not.have23)
+
+suppressWarnings(
+  suppressMessages({ 
+    
+    invisible(lapply(needzzsf, base::require, character.only = TRUE))
+    
+  }))
+  
+options(dplyr.summarise.inform = FALSE)                        
+
+  
+#======================================================================================================================================================
+ 
