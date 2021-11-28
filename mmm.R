@@ -1046,35 +1046,8 @@ fixed_form_rma <- function(fit){
   else if(!is.null(a) & is.null(b)) a
   else if(is.null(a) & !is.null(b)) as.formula(paste(as.character(y), paste(as.character(b), collapse = "")))
 }
-   
-#=================================================================================================================================================                
-    
-
-  
-#=================================================================================================================================================                
-   
-plot_rma_effect <- function(fit, multiline=TRUE, main=NA, ..., dots=FALSE) 
-   {
-   
-if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
-   
-data_. <- eval(fit$call$data)
-form_. <- fixed_form_rma(fit)
-
-fit2 <- nlme::gls(form_., data = data_.)
-
-fit2$call$model <- form_.
-fit2$call$data <- data_.
-
-fit2$coefficients <- unlist(data.frame(t(fit$b))) 
-fit2$varBeta <- fit$vb
-
-plot(allEffects(fit2, ...), multiline=multiline, main=main)
-
-if(dots) cat("Use", toString(dQuote(formalArgs(Effect.lm)[-c(2,10)])), "in '...'.\n")
-}  
-  
-#=================================================================================================================================================                
+       
+#=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
 
