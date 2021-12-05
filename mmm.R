@@ -1096,7 +1096,7 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
                             index=NULL, xlab, ylab, z.var, colors, cex, lty, 
                             lwd, ylim, xlim, factor.names, band.transparency, 
                             band.colors, grid=TRUE, axes, lattice, rotx, roty,
-                            symbols=list(pch = 19), ticks.x, lines=TRUE, robust=TRUE,
+                            symbols=list(pch = 19), ticks.x, lines=TRUE, robust=FALSE,
                             cluster, plot=TRUE, ...) 
 {
    
