@@ -404,8 +404,8 @@ latent_metareg <- function(fit, formula, group.id = c("first","second"),
                            tol = 1e-12, std = FALSE) 
 {
 
-  has_G <- isTRUE(fit$withG)
-  has_H <- isTRUE(fit$withH)
+  has_G <- fit$withG
+  has_H <- fit$withH
   group.id <- match.arg(group.id)
   
   if(!has_G) stop("Model must contain at least one correlated random effect term.", call. = FALSE)
