@@ -1183,6 +1183,7 @@ add_blank_row <- function(data, n_blank_row = 1, by = "study",
                           write = FALSE, file_name = "blank")
   {
   
+ data <- full_clean(data)
  dat <- group_split(data, !!rlang::sym(by)) %>% 
   map_dfr(~ .x[1:(nrow(.x) + n_blank_row),])
  
