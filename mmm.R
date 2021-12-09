@@ -63,48 +63,6 @@ pluralify_ <- function (x, keep.original = FALSE,
   
 }           
                                  
-#===============================================================================================================================
-
-cat_overlap1 <- function(data, study_id, ...){
-  
-  study_id <- rlang::ensym(study_id)
-  cat_mod <- rlang::ensyms(...)
-  cat_nms <- purrr::map_chr(cat_mod, rlang::as_string)
-  
-  idx <- cat_nms %in% names(data)
-  if(!all(idx)) stop(toString(dQuote(cat_nms[!idx]))," not found in the 'data'.", call. = FALSE)
-  
-  setNames(purrr::map(cat_mod,  ~ {
-    
-    studies_cats <- 
-      data %>%
-      dplyr::group_by(!!study_id, !!.x) %>%
-      dplyr::summarise(effects = n(), .groups = 'drop')
-    cat_names <- paste0(rlang::as_string(.x), c(".x", ".y"))
-    
-    studies_cats <- 
-      studies_cats %>%
-      dplyr::inner_join(studies_cats, by = rlang::as_string(study_id)) %>%
-      dplyr::group_by(!!!rlang::syms(cat_names)) %>%
-      dplyr::summarise(
-        studies = n(),
-        effects = sum(effects.x), .groups = 'drop') %>% 
-      dplyr::mutate(n = paste0(studies, " (", effects, ")") )
-    
-    out1 <- studies_cats %>%
-      dplyr::select(-studies, -effects) %>%
-      tidyr::pivot_wider(names_from = cat_names[2], values_from = n) %>%
-      dplyr::rename(`Moderator Category` = cat_names[1]) %>% 
-      dplyr::mutate(`Moderator Category` = as.character(`Moderator Category`)) %>% 
-      #dplyr::slice(match(names(.)[-1], `Moderator Category`))
-      dplyr::arrange(factor(`Moderator Category`, levels = names(.)[-1]))
-    
-    out2 <- out1[-1]
-    out2[upper.tri(out2)] <- "-"
-    dplyr::bind_cols(out1[1],out2)
-    
-  }), cat_nms)
-}
 #================================================================================================================================   
            
 cat_overlap <- function(data, study_id, ...){
@@ -665,6 +623,7 @@ num2fac <- function(data, ..., caps = FALSE, reverse = FALSE){
                               
 do_context <- function(data, context_vars, group_id){
   
+  data <- full_clean(data)
   all_names <- names(data)
   
   id <- grep("id|group|grp", all_names, value = TRUE, ignore.case = TRUE)
@@ -929,7 +888,7 @@ mins <- function(xx, ns){
  sapply(seq_len(ns), function(i) f(xx, i))
 }                
 
-        
+#================================================================================================================================================================        
 pair_list_ <- function(data, groups) {
   
   unique_counts <- table(data[[groups]])
@@ -1231,10 +1190,10 @@ cfactor <- function(df) metafor:::.cmicalc(df)
   
   
 #=================================================================================================================================================  
-# To get SDs for each group, the best choices is the first formula:
+# To get SDs for each group, the best choice is the first formula:
   
-range_iqr_n2sd <- function(min, max, q1, q3, n, dat) ( (max-min) / (4*qnorm( (n-.375)/(n+.25)))) + 
-  ( (q3-q1) / (4*qnorm( (n*.75-.125)/(n+.25))) ) 
+range_iqr_n2sd <- function(min, max, q1, q3, n, dat) { ( (max-min) / (4*qnorm( (n-.375)/(n+.25)))) + 
+  ( (q3-q1) / (4*qnorm( (n*.75-.125)/(n+.25))) ) } 
 
 range_n2sd <- function(min, max, n) ( (max-min) / (2*qnorm( (n-.375)/(n+.25))))
 
