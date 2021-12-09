@@ -1194,6 +1194,85 @@ add_blank_row <- function(data, n_blank_row = 1, by = "study",
  return(dat)
 }  
   
+#=================================================================================================================================================  
+  
+# Functions for group assignment differences in studies
+  
+d_cluster <- function(yi_adj,n,N,icc) { yi_adj*sqrt( 1-((2*(n-1)*icc)/(N-2)) ) }
+
+#=================================================================================================================================================
+  
+d_vi_cluster <- function(n, N, nT, nC, icc, w, yi){
+  
+  eta <-  1 + ((n - 1)*icc)
+  
+  #  z <- ( ((N-2)-2*(n-1)*icc)^2 + n*(N-2*n)*icc^2 + 2*(N-2*n)*icc*(1-icc) )  / 
+   # (2*((N-2*n)*icc*(1-icc))^2)
+    
+    z <- (((N-2)*(1-icc)^2) + (n*(N-2*n)*icc^2) + (2*(N-2*n)*icc*(1-icc)))   / 
+         (2*((N-2) - 2*(n-1)*icc)^2)
+    
+    
+    (w*sqrt( (((nT+nC)/(nT*nC))*eta) + yi^2*z))^2
+}
+
+#=================================================================================================================================================
+  
+LRR_vi_cluster <- function(n, icc, vi){
+  
+  DEF <- (n - 1) * icc + 1
+  DEF*vi
+}  
+  
+#=================================================================================================================================================
+  
+# Correction factor for hand caculation of Hedges' g
+cfactor <- function(df) metafor:::.cmicalc(df)  
+  
+  
+#=================================================================================================================================================  
+# To get SDs for each group, the best choices is the first formula:
+  
+range_iqr_n2sd <- function(min, max, q1, q3, n, dat) ( (max-min) / (4*qnorm( (n-.375)/(n+.25)))) + 
+  ( (q3-q1) / (4*qnorm( (n*.75-.125)/(n+.25))) ) 
+
+range_n2sd <- function(min, max, n) ( (max-min) / (2*qnorm( (n-.375)/(n+.25))))
+
+iqr_n2sd <- function(q1, q3, n) ( (q3-q1) / (2*qnorm( (n*.75-.125)/(n+.25))) )
+
+iqr_sd_cochrane <- function(q1, q3) (q3-q1)/1.35
+
+range_f2sd <- function(min, max, f) f * (max-min) 
+  
+#=================================================================================================================================================  
+  
+t2d <- function(t, n1, n2 = NA){
+  N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+  t/sqrt(N)
+}
+
+#=================================================================================================================================================
+  
+vi_d <- function(yi, n1i, n2i) { ((n1i + n2i)/(n1i * n2i)) + ((yi^2)/(2 * (n1i+n2i))) }
+  
+#=================================================================================================================================================
+   
+# To get Means for each group, the best choice is the first formula:
+  
+med_range_iqr_n2mean <- function(min, max, q1, q3, n, median) {
+  
+((2.2/(2.2+n^.75))*((min+max)/2))+((.7-(.72/n^.55))*((q1+q3)/2))+((.3+(.72/n^.55)-(2.2/(2.2+n^.75)))*median)
+
+}  
+  
+#=================================================================================================================================================
+  
+# Missing standard deviation and no other measure of variability: The Cochrane Handbook (6.5.2.3)
+# Note that this SD is the average of the SDs of the two groups and so it this same SD should be 
+# inputted into the meta-analysis for both groups.
+  
+mdifSE_n2sd <- function(mdifSE, n1, n2)  { mdifSE / ( sqrt ( (1/n1) + (1/n2) ) ) }  
+  
 #=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
