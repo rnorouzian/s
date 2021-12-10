@@ -786,7 +786,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
     if(save){
       
       filenm <- paste0(file_name_cook,".rds")
-      saveRDS(x, filenm)
+      saveRDS(cook, filenm)
       
       message("\nNote: Check folder '", basename(getwd()),"' for the", dQuote(filenm),"file.\n") 
     }
