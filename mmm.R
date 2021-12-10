@@ -270,7 +270,7 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
                         
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, main_extra_name = FALSE) 
+                      toplab = NULL, cex = 1, main = NULL, rowcount = TRUE, main_extra_name = FALSE) 
 {
   
   data <- rm.colrowNA(trim_(data)) %>%
@@ -573,7 +573,7 @@ prob_treat <- function(a = NULL, legend = "topright"){
   for(i in loop){
     p <- function(x) c[i] + ((1 - c[i])/(1 + exp(-a[i]*(x - b[i]))))  
     h[[i]] <- curve(p, from, to, add = i!= 1, n = 1e3, las = 1, ylim = 0:1,
-                    font.lab = 2, xlab = "Pre-test", xaxt = "n",
+                    font.lab = 2, xlab = "Pre-treatment (Pre-test)", xaxt = "n",
                     type = "n", ylab = "Prob. of Treatment", mgp = c(2, .5, 0), tck = -.015)
   }
 
