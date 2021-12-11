@@ -10,9 +10,9 @@ trim_ <- function(X){
 
 #===============================================================================================================================              
               
-lowercase_ <- function(X, FUN = tolower){
-  y <- sapply(names(X), function(x) is.character(as.vector(X[[x]])))
-  X[y] <- lapply(X[y], FUN)
+change_case <- function(X, except = NULL, FUN. = tolower){
+  y <- names(Filter(is.character, X[setdiff(names(X), except)]))
+  X[y] <- lapply(X[y], FUN.)
   return(X)
 }
               
