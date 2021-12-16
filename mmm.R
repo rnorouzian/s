@@ -634,7 +634,7 @@ do_context <- function(data, context_vars, group_id){
   data <- full_clean(data)
   all_names <- names(data)
   
-  id <- grep("id|group|grp", all_names, value = TRUE, ignore.case = TRUE)
+  id <- grep("id|group|grp|study|study_id|studyid", all_names, value = TRUE, ignore.case = TRUE)
   
   if(!all(group_id %in% all_names)) { 
     
