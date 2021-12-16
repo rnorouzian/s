@@ -774,9 +774,10 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
                                 reestimate = FALSE, save = FALSE, 
                                 file_name_cook = "cooks1",
                                 file_name_res_z = "rstudent1",
-                                view = 1, pos = 2){
+                                view = 1, pos = 2)
+{
   
-  
+  if(!inherits(fit,c("rma.mv"))) stop("Model is not 'rma.mv()'.", call. = FALSE)
   datziola <- clubSandwich:::getData(fit) %>%
   mutate(obsss = row_number())
   
