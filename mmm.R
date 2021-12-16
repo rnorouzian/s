@@ -636,7 +636,7 @@ do_context <- function(data, context_vars, group_id){
   
   id <- grep("id|group|grp|study|study_id|studyid", all_names, value = TRUE, ignore.case = TRUE)
   
-  if(!all(group_id %in% all_names)) { 
+  if(!all(group_id %in% all_names) || missing(group_id)) { 
     
     stop(paste(toString(dQuote(group_id)), "not found for 'group_id' in the 'data'.", if(length(id)>0) 
       paste("\nPossibly you meant to use", toString(dQuote(id)), "as 'group_id', no?")), call. = FALSE) 
