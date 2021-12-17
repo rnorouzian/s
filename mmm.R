@@ -1246,9 +1246,18 @@ med_range_iqr_n2mean <- function(min, max, q1, q3, n, median) {
   
 mdifSE_n2sd <- function(mdifSE, n1, n2)  { mdifSE / ( sqrt ( (1/n1) + (1/n2) ) ) }  
   
+#=================================================================================================================================================  
+  
+pairwise_rma <- function(fit, type = "Tukey"){
+  
+mat <- setNames(rep(1,length(coef(fit))), names(coef(fit)))
+
+summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted("none"))
+}
+  
 #=================================================================================================================================================                                
   
-needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'tidyverse')      
+needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp', 'tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
