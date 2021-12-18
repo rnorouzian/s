@@ -1075,68 +1075,57 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
                             symbols=list(pch = 19), ticks.x, lines=TRUE, robust=FALSE,
                             cluster, plot=TRUE, ...) 
 {
-   
-   if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
-   
-   data_. <- eval(fit$call$data)
-   form_. <- fixed_form_rma(fit)
-   
-   fit2 <- nlme::gls(form_., data = data_., method = fit$method, na.action = "na.omit")
-   
-   fit2$call$model <- form_.
-   fit2$call$data <- data_.
-   
-   fit2$coefficients <- unlist(data.frame(t(fit$b))) 
-   fit2$varBeta <- fit$vb
-   #fit2$df.residual <- .Machine$double.xmax
-   #fit2$dims$N <- .Machine$double.xmax
   
-   if(robust) { 
+  if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
+  
+  fit2 <- rma2gls(fit)
+  
+#  if(robust) { 
+    
+#    is_rmv <- inherits(fit,"rma.mv") 
+    
+#    if(is_rmv){   
+#      mm <- try(clubSandwich:::findCluster.rma.mv(fit), silent = TRUE)
       
-   is_rmv <- inherits(fit,"rma.mv") 
-   
-   if(is_rmv){   
-      mm <- try(clubSandwich:::findCluster.rma.mv(fit), silent = TRUE)
+#      is_bad_for_sandwich <- inherits(mm, "try-error")
       
-      is_bad_for_sandwich <- inherits(mm, "try-error")
-      
-   } else { is_bad_for_sandwich <- FALSE }
-      
-      if(is_bad_for_sandwich) message("Robust estimation was infeasible.\n")
-      
-      if(!is_rmv) cluster <- rownames(data_.)
-      
-      if(!is_bad_for_sandwich) fit2$varBeta <- vcovCR(fit, cluster=cluster, type="CR2")
-   }
-   
-   x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
-   
-   if(!is.null(index)) { 
-      
-     x <- if(!full) x[[index[1]]] else x[index]
-   
-   }
-
-if(plot){   
-xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
-        confint=confint, x.var=x.var, z.var=z.var, key.args=key.args, 
-        xlab=xlab, ylab=ylab, colors=colors, cex=cex, lty=lty, 
-        lwd=lwd, ylim=ylim, xlim=xlim, factor.names=factor.names, band.transparency=band.transparency, 
-        band.colors=band.colors, grid=grid, lattice=lattice, axes=axes, rotx=rotx, roty=roty, symbols=symbols,
-        ticks.x=ticks.x, lines=lines)
-   
-   xcv$x.scales$tck=c(1,0)
-   xcv$y.scales$tck=c(1,0)
-
-   print(xcv)
-   
-   return(x)
-   
-} else {
-   
-   return(x)
-   }
-} 
+#    } else { is_bad_for_sandwich <- FALSE }
+    
+#    if(is_bad_for_sandwich) message("Robust estimation was infeasible.\n")
+    
+#    if(!is_rmv) cluster <- rownames(data_.)
+    
+#    if(!is_bad_for_sandwich) fit2$varBeta <- vcovCR(fit, cluster=cluster, type="CR2")
+#  }
+  
+  x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
+  
+  if(!is.null(index)) { 
+    
+    x <- if(!full) x[[index[1]]] else x[index]
+    
+  }
+  
+  if(plot){   
+    xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
+                confint=confint, x.var=x.var, z.var=z.var, key.args=key.args, 
+                xlab=xlab, ylab=ylab, colors=colors, cex=cex, lty=lty, 
+                lwd=lwd, ylim=ylim, xlim=xlim, factor.names=factor.names, band.transparency=band.transparency, 
+                band.colors=band.colors, grid=grid, lattice=lattice, axes=axes, rotx=rotx, roty=roty, symbols=symbols,
+                ticks.x=ticks.x, lines=lines)
+    
+    xcv$x.scales$tck=c(1,0)
+    xcv$y.scales$tck=c(1,0)
+    
+    print(xcv)
+    
+    return(x)
+    
+  } else {
+    
+    return(x)
+  }
+}
 
 #=================================================================================================================================================
   
@@ -1255,6 +1244,24 @@ pairwise_rma <- function(fit, type = "Tukey", adjust = "none"){
   summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted(adjust))
 }
   
+
+#================================================================================================================================================  
+  
+rma2gls <- function(fit){
+  
+  data_. <- eval(fit$call$data)
+  form_. <- fixed_form_rma(fit)
+  
+  fit2 <- nlme::gls(form_., data = data_., method = fit$method, na.action = "na.omit")
+  
+  fit2$call$model <- form_.
+  fit2$call$data <- data_.
+  
+  fit2$coefficients <- unlist(data.frame(t(fit$b))) 
+  fit2$varBeta <- fit$vb
+  
+  return(fit2)
+} 
   
 #================================================================================================================================================
   
