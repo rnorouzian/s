@@ -1088,7 +1088,7 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
    
    fit2$coefficients <- unlist(data.frame(t(fit$b))) 
    fit2$varBeta <- fit$vb
-   fit2$df.residual <- .Machine$double.xmax
+   #fit2$df.residual <- .Machine$double.xmax
    #fit2$dims$N <- .Machine$double.xmax
   
    if(robust) { 
