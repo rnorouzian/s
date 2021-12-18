@@ -666,7 +666,7 @@ do_context <- function(data, context_vars, group_id = NULL){
   if(is_num){
     data <- data %>%
       group_by(across(all_of(group_id))) %>%                          
-      mutate(across(all_of(num_names), list(wthn = ~ . - mean(.), btw = ~ mean(.)))) %>% 
+      mutate(across(all_of(num_names), list(wn = ~ . - mean(.), bt = ~ mean(.)))) %>% 
       as.data.frame()
   }
   
@@ -674,7 +674,7 @@ do_context <- function(data, context_vars, group_id = NULL){
     data <- data %>%
       dummy_cols(select_columns = dum_names) %>% 
       group_by(across(all_of(group_id))) %>%                          
-      mutate(across(starts_with(paste0(dum_names, "_")), list(wthn = ~ . - mean(.), btw = ~ mean(.)))) %>% 
+      mutate(across(starts_with(paste0(dum_names, "_")), list(wn = ~ . - mean(.), bt = ~ mean(.)))) %>% 
       as.data.frame()
   }
   
