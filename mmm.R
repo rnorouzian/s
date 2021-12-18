@@ -633,19 +633,19 @@ num2fac <- function(data, ..., caps = FALSE, reverse = FALSE){
                               
 #===============================================================================================================================================
                               
-do_context <- function(data, context_vars, group_id){
+do_context <- function(data, context_vars, group_id = NULL){
   
   data <- full_clean(data)
   all_names <- names(data)
   
-  id <- grep("id|group|grp|study|study_id|studyid", all_names, value = TRUE, ignore.case = TRUE)
+  id <- grep("id|group|grp|study", all_names, value = TRUE, ignore.case = TRUE)
   
-  if(!all(group_id %in% all_names) || missing(group_id)) { 
+  if(is.null(group_id) || !all(group_id %in% all_names)) { 
     
     stop(paste(toString(dQuote(group_id)), "not found for 'group_id' in the 'data'.", if(length(id)>0) 
       paste("\nPossibly you meant to use", toString(dQuote(id)), "as 'group_id', no?")), call. = FALSE) 
     
-    }
+  }
   
   ok <- context_vars %in% all_names
   
