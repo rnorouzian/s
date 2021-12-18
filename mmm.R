@@ -1255,6 +1255,46 @@ mat <- setNames(rep(1,length(coef(fit))), names(coef(fit)))
 summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted("none"))
 }
   
+  
+#================================================================================================================================================
+  
+plot_model <- function(fit, coef = 1:5, xlab = "", ylab = "", cont_name = NULL,
+                       labels = NULL, main = "", ylim = NULL, ...){
+  
+  ff <- conf_int(fit, "CR2")
+  ci <- c(ff$CI_L[coef], ff$CI_U[coef])
+  
+  cont <- function(fit, coef, cont_name, ...){
+    
+    data <- clubSandwich:::getData(fit)
+    
+    curve(ff$beta[1] + x*ff$beta[coef], from=min(data[[cont_name]],na.rm = TRUE), 
+          to=max(data[[cont_name]],na.rm = TRUE), xlab = xlab, ylab = ylab, 
+          mgp=c(1.5,.4,0), ...)
+    title(main = main, cex.main=.9, line = .2)
+  }
+  
+  if(!is.null(cont_name)) return(
+    
+    
+    cont(fit, coef, cont_name, ...)
+    
+  )
+  
+  plot(coef-1,ff$beta[coef], type="b", ylim = 
+         if(is.null(ylim)) range(ci) else ylim, xaxt="n",
+       ylab = ylab, xlab = xlab, mgp = c(1.5,.4,0), ...)
+  
+  abline(h=0,col=8,lty=3)
+  segments(coef-1, ci[coef], y1=ci[coef+length(coef)])
+  
+  axis(1, at=coef-1, labels = if(is.null(labels)) rownames(ff)[coef] else labels,
+       mgp=c(1.5,.4,0), ...)
+  
+  points(coef-1,ff$beta[coef], pch=19)
+  title(main,cex.main=.9,line = .2)
+}  
+  
 #=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp', 'tidyverse')      
