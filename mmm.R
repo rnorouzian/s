@@ -1248,11 +1248,11 @@ mdifSE_n2sd <- function(mdifSE, n1, n2)  { mdifSE / ( sqrt ( (1/n1) + (1/n2) ) )
   
 #=================================================================================================================================================  
   
-pairwise_rma <- function(fit, type = "Tukey"){
+pairwise_rma <- function(fit, type = "Tukey", adjust = "none"){
   
-mat <- setNames(rep(1,length(coef(fit))), names(coef(fit)))
-
-summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted("none"))
+  mat <- setNames(rep(1,length(coef(fit))), names(coef(fit)))
+  
+  summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted(adjust))
 }
   
   
