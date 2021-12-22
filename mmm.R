@@ -1301,7 +1301,11 @@ plot_model <- function(fit, coef = 1:5, xlab = "", ylab = "", cont_name = NULL,
   points(coef-1,ff$beta[coef], pch=19)
   title(main,cex.main=.9,line = .2)
 }  
-  
+
+#=================================================================================================================================================
+
+lrr2percent <- function(lrr) (exp(lrr) - 1)*1e2       
+       
 #=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp', 'tidyverse')      
