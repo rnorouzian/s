@@ -1299,6 +1299,31 @@ plot_model <- function(fit, coef = 1:5, xlab = "", ylab = "", cont_name = NULL,
 #=================================================================================================================================================
 
 lrr2percent <- function(lrr) (exp(lrr) - 1)*1e2       
+      
+#=================================================================================================================================================       
+       
+lrr <- function(mT, nT, sdT, mC, nC, sdC){
+  
+f <- function(mT, nT, sdT, mC, nC, sdC){
+  
+  means <- c(mT, mC)
+  ns <- c(nT, nC)
+  variances <- c(sdT, sdC)^2
+  
+  bc <- log(means) - variances/(2 * ns * means^2)
+  lRR <- as.numeric(bc[1] - bc[2])
+  
+  LRR_vi <- sum(variances/(ns * means^2))
+  
+  percent_dif <- (exp(lRR)-1)*1e2
+  
+  c(LRR = lRR, percent_dif = percent_dif, 
+     LRR_vi = LRR_vi)
+}
+
+pmap_dfr(list(mT=mT, nT=nT, sdT=sdT, mC=mC, nC=nC, sdC=sdC), f)
+
+}       
        
 #=================================================================================================================================================                                
   
