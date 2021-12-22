@@ -21,22 +21,16 @@ change_case <- function(X, except = NULL, fun = tolower){
 
 rm.allrowNA <- function(X) { 
   
-  if(inherits(X, "list")){
-    
-    lapply(X, function(i) i[rowSums(is.na(i) | i == "") != ncol(i), , drop = FALSE])
-    
-  } else { X[rowSums(is.na(X) | X == "") != ncol(X), , drop = FALSE] }
+X[rowSums(is.na(X) | X == "") != ncol(X), , drop = FALSE]  
+  
 }
 
 #===============================================================================================================================
 
 rm.allcolNA <- function(X) { 
   
-  if(inherits(X, "list")){
-    
-    lapply(X, function(i) i[, colSums(is.na(i) | i == "") != nrow(i), drop = FALSE])
-    
-  } else { X[, colSums(is.na(X) | X == "") != nrow(X), drop = FALSE] }
+X[, colSums(is.na(X) | X == "") != nrow(X), drop = FALSE]
+  
 }
 
 #===============================================================================================================================
@@ -821,7 +815,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
     }
   }
   
-  # Make visual size of effects proportional to their cook's distance (estimate influence)
+  # Make visual size of effects proportional to their hat/cook's distance (estimate influence)
   cex <- cex_add_point+cex_multi_point*sqrt(if(view == 1)cook else hat)
   
   # Plot Leverage against Studentized residuals proportioned on cook's distances
@@ -841,10 +835,10 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   
   max_cook <- max(mean(range(cook)), boxplot.stats(cook, coef = whisker_coef)$stats[5])
   
-  if(view == 1) abline(v = max_hat, col=2) else abline(v = max_cook, col=2)
+   abline(v = if(view == 1) max_hat else max_cook, col=2)
   
   # To be outlier, an estimate must simultaneously (a) be outlying (per studentized value)
-  # (b) have high leverage (hat value), and (c) high model influence (cook's distance)
+  # (b) have high leverage (per hat value), and (c) high model influence (per cook's distance)
   
   i <- abs(st_del_res_z) > outlier_limits[3]  
   j <- hat > max_hat
