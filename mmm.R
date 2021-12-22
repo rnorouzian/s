@@ -1311,13 +1311,13 @@ f <- function(mT, nT, sdT, mC, nC, sdC){
   variances <- c(sdT, sdC)^2
   
   bc <- log(means) - variances/(2 * ns * means^2)
-  lRR <- as.numeric(bc[1] - bc[2])
+  LRR <- as.numeric(bc[1] - bc[2])
   
   LRR_vi <- sum(variances/(ns * means^2))
   
-  percent_dif <- (exp(lRR)-1)*1e2
+  percent_dif <- (exp(LRR)-1)*1e2
   
-  c(LRR = lRR, percent_dif = percent_dif, 
+  c(LRR = LRR, percent_dif = percent_dif, 
      LRR_vi = LRR_vi)
 }
 
