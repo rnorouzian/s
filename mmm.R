@@ -1092,13 +1092,9 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
 #    if(!is_bad_for_sandwich) fit2$varBeta <- vcovCR(fit, cluster=cluster, type="CR2")
 #  }
   
-  x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
+x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
   
-  if(!is.null(index)) { 
-    
-    x <- if(!full) x[[index[1]]] else x[index]
-    
-  }
+x <- if(!is.null(index)) x[index] else x
   
   if(plot){   
     xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
