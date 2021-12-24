@@ -1336,7 +1336,7 @@ clean_reg_names <- function(fit) {
   v2 <- setdiff(vec, v1)
   v3 <- sub(paste(v1, collapse = "|"), "", v2)
   vec[vec %in% v2] <- v3
-  vec[vec=="intrcpt"] <- "Intercept"
+  vec[vec=="intrcpt"] <- if(fit$int.only) "Average Effect" else "Intercept"
   rownames(fit$b) <- vec
   rownames(fit$beta) <- vec
   rownames(fit$vb) <- colnames(fit$vb) <- vec
