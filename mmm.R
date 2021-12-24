@@ -1229,6 +1229,8 @@ mdifSE_n2sd <- function(mdifSE, n1, n2)  { mdifSE / ( sqrt ( (1/n1) + (1/n2) ) )
   
 pairwise_rma <- function(fit, type = "Tukey", adjust = "none"){
   
+  fit <- clean_reg_names(fit)
+  
   mat <- setNames(rep(1,length(coef(fit))), names(coef(fit)))
   
   summary(glht(fit, linfct=contrMat(mat, type=type)), test=adjusted(adjust))
@@ -1257,6 +1259,8 @@ rma2gls <- function(fit){
   
 plot_model <- function(fit, coef = 1:5, xlab = "", ylab = "", cont_name = NULL,
                        labels = NULL, main = "", ylim = NULL, ...){
+  
+  fit <- clean_reg_names(fit)
   
   ff <- conf_int(fit, "CR2")
   ci <- c(ff$CI_L[coef], ff$CI_U[coef])
@@ -1319,6 +1323,88 @@ f <- function(mT, nT, sdT, mC, nC, sdC){
 
 pmap_dfr(list(mT=mT, nT=nT, sdT=sdT, mC=mC, nC=nC, sdC=sdC), f)
 
+}       
+     
+#=================================================================================================================================================       
+       
+clean_reg_names <- function(fit) {
+  
+  fmla <- fixed_form_rma(fit)
+  vec <- rownames(fit$b)
+  
+  v1 <- all.vars(fmla)
+  v2 <- setdiff(vec, v1)
+  v3 <- sub(paste(v1, collapse = "|"), "", v2)
+  vec[vec %in% v2] <- v3
+  vec[vec=="intrcpt"] <- "Intercept"
+  rownames(fit$b) <- vec
+  rownames(fit$beta) <- vec
+  rownames(fit$vb) <- colnames(fit$vb) <- vec
+  return(fit)
+}       
+  
+#=================================================================================================================================================       
+       
+results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
+
+fit <- clean_reg_names(fit)
+
+res <- if(!robust) { 
+  
+a <- coef(summary(fit))
+
+nm <- c("Estimate","SE","t-value","Df","p-value","Lower","Upper")
+
+tab_colnm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value"; nm[-4] }
+
+colnames(a) <- tab_colnm
+  
+  a
+  } else {
+  
+  a <- as.data.frame(conf_int(fit, vcov = "CR2"))
+
+  a$p_Satt <- coef_test(fit, vcov = "CR2")$p_Satt
+  
+  a <- a[c(1:3,6,4:5)]
+  
+  colnames(a) <- c("Estimate","SE","Df","p-value","Lower","Upper")
+  a
+}
+
+if(fit$withS){
+  
+d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(fit$s.names, "(Int. random)")) 
+  
+}
+
+is_un <- any(fit$struct %in% "UN" || fit$struct %in% "GEN")
+is_diag <- any(fit$struct %in% "DIAG")
+h <- "Correlation"
+
+if(fit$withG){
+  g <- rownames(fit$G)
+  d2 <- data.frame(Tau = sqrt(fit$tau2), row.names = paste0(g, if(is_diag)"(Uncor. random)" else paste("(Cor.",fit$g.names[1],"random)"))) 
+  d3 <- data.frame(Rho = fit$rho, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
+} else { d2 <- NULL; d3 <- NULL}
+
+if(fit$withH){
+  g <- rownames(fit$H)
+  d4 <- data.frame(Gamma = sqrt(fit$gamma2), row.names = paste0(g, if(is_diag)"(Uncor. random)" else paste("(Cor.",fit$h.names[1],"random)"))) 
+  d5 <- data.frame(Phi = fit$phi, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
+} else { d4 <- NULL; d5 <- NULL}
+
+out <- round(dplyr::bind_rows(res, d1, d2, d3, d4, d5), digits = digits)
+
+out[is.na(out)] <- blank_sign
+
+p.values <- as.numeric(out$"p-value")
+Signif <- symnum(p.values, corr = FALSE, 
+                 na = FALSE, cutpoints = 
+                   c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                 symbols = c("***", "**", "*", ".", " "))
+
+add_column(out, Sig. = Signif, .after = "p-value")
 }       
        
 #=================================================================================================================================================                                
