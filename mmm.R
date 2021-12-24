@@ -1406,10 +1406,50 @@ Signif <- symnum(p.values, corr = FALSE,
 
 add_column(out, Sig. = Signif, .after = "p-value")
 }       
-       
+
+#=================================================================================================================================================                   
+                   
+roundi <- function(x, digits = 7){
+  
+  if(!inherits(x, "data.frame")) stop("'x' must be a 'data.frame'.", call. = FALSE)
+  
+  num <- sapply(x, is.numeric)
+  
+  x[num] <- lapply(x[num], round, digits)
+  
+  return(x)
+}                    
+                   
+#=================================================================================================================================================
+                   
+mc_rma <- function(fit, specs, by = NULL, infer = c(TRUE, TRUE), horiz = TRUE, 
+                   adjust = "tukey", compare = FALSE, plot = FALSE, 
+                   reverse = TRUE, digits = 3, xlab = "Estimated Effect", ...){
+  
+  fit <- rma2gls(fit)
+  
+  ems <- emmeans(object = fit, specs = specs, infer = infer)
+
+  if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab, ...)) 
+
+  out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
+  
+  names(out) <- c("Contrast","Estimate","SE","t-value","Df","p-value","Lower","Upper")
+  
+  p.values <- as.numeric(out$"p-value")
+  Signif <- symnum(p.values, corr = FALSE, 
+                   na = FALSE, cutpoints = 
+                     c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                   symbols = c("***", "**", "*", ".", " "))
+  
+  out <- add_column(out, Sig. = Signif, .after = "p-value")
+  
+  roundi(out, digits = digits)
+}        
+                   
 #=================================================================================================================================================                                
   
-needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp', 'tidyverse')      
+needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp','emmeans','tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
