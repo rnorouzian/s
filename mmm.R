@@ -1334,6 +1334,7 @@ clean_reg_names <- function(fit) {
   
   v1 <- all.vars(fmla)
   v2 <- setdiff(vec, v1)
+  v1 <- paste0('^', v1)
   v3 <- sub(paste(v1, collapse = "|"), "", v2)
   vec[vec %in% v2] <- v3
   vec[vec=="intrcpt"] <- if(fit$int.only) "Average Effect" else "Intercept"
