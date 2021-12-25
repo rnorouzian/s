@@ -1484,14 +1484,22 @@ mc_rma <- function(fit, specs, by = NULL, infer = c(TRUE, TRUE), horiz = TRUE,
                      
 #=================================================================================================================================================
                      
-mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", ...){
+mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3, ...){
   
   obj <- clean_reg_names(fit)
   
-  out <- as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
-            test=test, tidy=TRUE, ...))[-c(2,4)]
+  out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
+                                 test=test, tidy=TRUE, ...))[-c(2,4)], digits)
   
-  setNames(out, c("Contrast","F-value","Df1","Df2","p-value"))
+  out <- setNames(out, c("Contrast","F-value","Df1","Df2","p-value"))
+  
+  p.values <- as.numeric(out$"p-value")
+  Signif <- symnum(p.values, corr = FALSE, 
+                   na = FALSE, cutpoints = 
+                     c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                   symbols = c("***", "**", "*", ".", " "))
+  
+  add_column(out, Sig. = Signif, .after = "p-value")
 }
                      
 #=================================================================================================================================================                                
