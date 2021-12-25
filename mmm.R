@@ -1358,8 +1358,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     tab_colnm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value"; nm[-4] }
     
     colnames(a) <- tab_colnm
-    
     a
+    
   } else {
     
     a <- as.data.frame(conf_int(fit, vcov = "CR2"))
@@ -1377,22 +1377,31 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(fit$s.names, "(Int. random)")) 
-    
   }
   
-  is_un <- any(fit$struct %in% "UN" || fit$struct %in% "GEN")
-  is_diag <- any(fit$struct %in% "DIAG")
-  h <- "Correlation"
-  
+ 
   if(fit$withG){
+    h <- paste(fit$struct[1], "Corr.")
+    is_un <- fit$struct[1] == "UN" || fit$struct[1] == "GEN"
+    is_diag <- fit$struct[1] == "DIAG"
+    rnm <- paste("Level:", fit$g.names[2])
     g <- rownames(fit$G)
     d2 <- data.frame(Tau = sqrt(fit$tau2), row.names = paste0(g, if(is_diag)"(Uncor. random)" else paste("(Cor.",fit$g.names[1],"random)"))) 
+    d2 <- rbind(NA, d2)
+    rownames(d2)[1] <- rnm
     d3 <- data.frame(Rho = fit$rho, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
   } else { d2 <- NULL; d3 <- NULL}
   
+  
   if(fit$withH){
+    h <- paste(fit$struct[2], "Corr.")
+    is_un <- fit$struct[2] == "UN" || fit$struct[2] == "GEN"
+    is_diag <- fit$struct[2] == "DIAG"
+    rnm <- paste("Level:", fit$h.names[2])
     g <- rownames(fit$H)
     d4 <- data.frame(Gamma = sqrt(fit$gamma2), row.names = paste0(g, if(is_diag)"(Uncor. random)" else paste("(Cor.",fit$h.names[1],"random)"))) 
+    d4 <- rbind(NA, d4)
+    rownames(d4)[1] <- rnm
     d5 <- data.frame(Phi = fit$phi, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
   } else { d4 <- NULL; d5 <- NULL}
   
@@ -1406,8 +1415,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
-add_column(out, Sig. = Signif, .after = "p-value")  
-}       
+add_column(out, Sig. = Signif, .after = "p-value")
+}
 
 #=================================================================================================================================================                   
                    
