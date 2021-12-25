@@ -52,6 +52,21 @@ full_clean <- function(data) rm.colrowNA(trim_(data))
 #===============================================================================================================================
                     
 odiag <- function(x) x[(n <- nrow(x))^2-(1:n)*(n-1)]
+
+#===============================================================================================================================
+                    
+get_error_rho <- function(fit){
+  
+is_V <- any(odiag(fit$V) != 0)  
+
+if(is_V) {
+  
+  u <- unique(odiag(round(cov2cor(fit$V), 4)))
+  u[u!=0]
+  
+} else 0
+  
+}                    
                     
 #===============================================================================================================================
            
@@ -1377,14 +1392,13 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     a
   }
   
- res <- rbind(round(res, digits), "(RANDOM)"= rep("", ncol(res)))
-
+  res <- rbind(round(res, digits), "(RANDOM)"= rep("", ncol(res)))
+  
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(fit$s.names, "(Int. random)")) 
   }
   
- 
   if(fit$withG){
     h <- paste(fit$struct[1], "Corr.")
     is_un <- fit$struct[1] == "UN" || fit$struct[1] == "GEN"
@@ -1396,8 +1410,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     rownames(d2)[1] <- rnm
     d3 <- data.frame(Rho = fit$rho, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
   } else { d2 <- NULL; d3 <- NULL}
-  
-  
+    
   if(fit$withH){
     h <- paste(fit$struct[2], "Corr.")
     is_un <- fit$struct[2] == "UN" || fit$struct[2] == "GEN"
@@ -1410,7 +1423,12 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     d5 <- data.frame(Phi = fit$phi, row.names = if(!is_un) paste0(h, "(",paste0(g,collapse=','),")") else apply(combn(g,2),2,paste0,collapse = "~"))
   } else { d4 <- NULL; d5 <- NULL}
   
-  out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5), digits = digits)
+  u <- get_error_rho(fit)
+  cte <- length(u) == 1
+  
+  d6 <- data.frame(r = if(cte) u else u[1], row.names = paste0("Within Corr.(",if(cte) "constant" else "varying",")")) 
+  
+  out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5, d6), digits = digits)
   
   out[is.na(out)] <- blank_sign
   
@@ -1420,7 +1438,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
-add_column(out, Sig. = Signif, .after = "p-value")
+  add_column(out, Sig. = Signif, .after = "p-value")
 }
 
 #=================================================================================================================================================                   
