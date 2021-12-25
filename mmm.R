@@ -50,6 +50,10 @@ na_cols <- function(data) names(which(colSums(is.na(data)) > 0))
 full_clean <- function(data) rm.colrowNA(trim_(data))           
    
 #===============================================================================================================================
+                    
+odiag <- function(x) x[(n <- nrow(x))^2-(1:n)*(n-1)]
+                    
+#===============================================================================================================================
            
 pluralify_ <- function (x, keep.original = FALSE, 
                          irregular = lexicon::pos_df_irregular_nouns) {
