@@ -1458,7 +1458,20 @@ mc_rma <- function(fit, specs, by = NULL, infer = c(TRUE, TRUE), horiz = TRUE,
   
   roundi(out, digits = digits)
 }        
-                   
+  
+                     
+#=================================================================================================================================================
+                     
+mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", ...){
+  
+  obj <- clean_reg_names(fit)
+  
+  out <- as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
+            test=test, tidy=TRUE, ...))[-c(2,4)]
+  
+  setNames(out, c("Contrast","F-value","Df1","Df2","p-value"))
+}
+                     
 #=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp','emmeans','tidyverse')      
