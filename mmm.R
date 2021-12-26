@@ -76,7 +76,7 @@ is_crossed <- function(obj){
   highest_cluster <- names(mod_struct$level_dat)[which.min(mod_struct$level_dat)]
   cluster <- mod_struct$cluster_dat[[highest_cluster]]
   out <- !clubSandwich:::test_nested(cluster, fac = mod_struct$cluster_dat)
-  out[!names(out) %in% c("G","H")]
+  out[names(out) %in% obj$s.names]
 }
                     
 #===============================================================================================================================
