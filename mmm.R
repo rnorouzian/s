@@ -67,6 +67,18 @@ if(is_V) {
 } else 0
   
 }                    
+
+#===============================================================================================================================                    
+                    
+crossed_ <- function(obj){
+  
+mod_struct <- clubSandwich:::parse_structure(obj)
+highest_cluster <- names(mod_struct$level_dat)[which.min(mod_struct$level_dat)]
+cluster <- mod_struct$cluster_dat[[highest_cluster]]
+out <- clubSandwich:::test_nested(cluster, fac = mod_struct$cluster_dat)
+names(out[!out])
+
+}
                     
 #===============================================================================================================================
            
@@ -1396,7 +1408,10 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   
   if(fit$withS){
     
-    d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(fit$s.names, "(Int. random)")) 
+    cr <- crossed_(fit)
+    ns <- fit$s.names
+    crs <- ns %in% cr
+    d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(ns, ifelse(crs,"(Cross. random)","(Int. random)"))) 
   }
   
   if(fit$withG){
