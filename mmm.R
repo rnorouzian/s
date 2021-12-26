@@ -70,14 +70,12 @@ if(is_V) {
 
 #===============================================================================================================================                    
                     
-crossed_ <- function(obj){
+is_crossed <- function(obj){
   
-mod_struct <- clubSandwich:::parse_structure(obj)
-highest_cluster <- names(mod_struct$level_dat)[which.min(mod_struct$level_dat)]
-cluster <- mod_struct$cluster_dat[[highest_cluster]]
-out <- clubSandwich:::test_nested(cluster, fac = mod_struct$cluster_dat)
-names(out[!out])
-
+  mod_struct <- clubSandwich:::parse_structure(obj)
+  highest_cluster <- names(mod_struct$level_dat)[which.min(mod_struct$level_dat)]
+  cluster <- mod_struct$cluster_dat[[highest_cluster]]
+  !clubSandwich:::test_nested(cluster, fac = mod_struct$cluster_dat)
 }
                     
 #===============================================================================================================================
@@ -1368,7 +1366,7 @@ clean_reg_names <- function(fit) {
   v1 <- paste0('^', v1)
   v3 <- sub(paste(v1, collapse = "|"), "", v2)
   vec[vec %in% v2] <- v3
-  vec[vec=="intrcpt"] <- if(fit$int.only) "Average Effect" else "Intercept"
+  vec[vec=="intrcpt"] <- if(fit$int.only) "Overall Effect" else "Intercept"
   rownames(fit$b) <- vec
   rownames(fit$beta) <- vec
   rownames(fit$vb) <- colnames(fit$vb) <- vec
@@ -1408,10 +1406,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   
   if(fit$withS){
     
-    cr <- crossed_(fit)
-    ns <- fit$s.names
-    crs <- ns %in% cr
-    d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(ns, ifelse(crs,"(Cross. random)","(Int. random)"))) 
+    cr <- is_crossed(fit)
+    d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
   }
   
   if(fit$withG){
