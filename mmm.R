@@ -1380,6 +1380,14 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   
   fit <- clean_reg_names(fit)
   
+  cr <- is_crossed(fit)
+  
+  if(robust & any(cr)) { 
+    
+    robust <- FALSE
+    message("Robust estimation not available for models with crossed random-effects.")
+  }
+  
   res <- if(!robust) { 
     
     a <- coef(summary(fit))
@@ -1406,10 +1414,9 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   res <- rbind(round(res, digits), "(RANDOM)"= rep("", ncol(res)))
   
   if(fit$withS){
-    
-    cr <- is_crossed(fit)
+  
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
-  }
+  } else { d1 <- NULL}
   
   if(fit$withG){
     h <- paste(fit$struct[1], "Corr.")
