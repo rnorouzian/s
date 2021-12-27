@@ -1397,9 +1397,9 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     
     nm <- c("Estimate","SE","t-value","Df","p-value","Lower","Upper")
     
-    tab_colnm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value"; nm[-4] }
+    nm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value"; nm[-4] }
     
-    setNames(a, tab_colnm)
+    setNames(a, nm)
     
   } else {
     
@@ -1416,7 +1416,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   
   if(fit$withS){
     
-    d1 <- data.frame(Sigma = sqrt(fit$sigma2), row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
+    d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
+                     row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
  
      } else { d1 <- NULL}
   
@@ -1473,7 +1474,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   u <- get_error_rho(fit)
   cte <- length(u) == 1
   
-  d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")")) 
+  d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
+    row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")")) 
   
   out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5, d6), digits = digits)
   
