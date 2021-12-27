@@ -1376,7 +1376,7 @@ clean_reg_names <- function(fit) {
   
 #=================================================================================================================================================       
        
-results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
+results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", width_G = 20, width_H = 20){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   
@@ -1441,7 +1441,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     
     d3 <- data.frame(Rho = fit$rho, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~") 
-                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = 20),")")) 
+                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = width_G),")")) 
     
   } else { d2 <- NULL; d3 <- NULL}
   
@@ -1467,7 +1467,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     
     d5 <- data.frame(Phi = fit$phi, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~ ")
-                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = 20),") "))
+                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = width_H),") "))
     
   } else { d4 <- NULL; d5 <- NULL}
   
