@@ -1379,7 +1379,6 @@ clean_reg_names <- function(fit) {
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
-  if(any(fit$struct %in% "GEN")) stop("'GEN' structure is not supported.", call. = FALSE)
   
   fit <- clean_reg_names(fit)
   
@@ -1418,64 +1417,65 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
                      row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
- 
-     } else { d1 <- NULL}
+    
+  } else { d1 <- NULL}
   
   if(fit$withG){
     
     h <- paste(fit$struct[1], "Corr.")
-    is_un <- fit$struct[1] == "UN" 
+    is_un <- fit$struct[1] == "UN"
+    is_gen <- fit$struct[1] == "GEN"
     is_diag <- fit$struct[1] == "DIAG"
-    is_simple <- fit$g.nlevels[1] > length(fit$tau2)
+    is_simple <- length(fit$tau2) == 1
     
     rnm <- paste("Level:", tail(fit$g.names,1))
-    g <- rownames(fit$G)
-   
+    clnm <- clean_GH_names(fit)
+    
     d2 <- data.frame(Tau = sqrt(fit$tau2), 
-                     row.names = paste0(if(!is_simple) g else "",
+                     row.names = paste0(if(!is_simple) clnm else fit$g.names[1],
                                         paste(if(is_diag)"(Uncor." 
-                                              else "(Cor.",fit$g.names[1],"random)")))
+                                              else "(Cor.","random)")))
     
     d2 <- rbind(NA, d2)
     rownames(d2)[1] <- rnm
     
     d3 <- data.frame(Rho = fit$rho, 
-                     row.names = if(!is_simple & !is_un) paste0(h,"(",paste0(g,collapse=','),")") 
-                     else if(is_un) apply(combn(g,2),2,paste0, collapse = "~") 
-                     else paste0(h, "(",paste0(fit$g.names[1]),")")) 
+                     row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~") 
+                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = 20),")")) 
     
-     } else { d2 <- NULL; d3 <- NULL}
+  } else { d2 <- NULL; d3 <- NULL}
   
   if(fit$withH){
     
     h <- paste(fit$struct[2], "Corr.")
     is_un <- fit$struct[2] == "UN"
+    is_gen <- fit$struct[2] == "GEN"
     is_diag <- fit$struct[2] == "DIAG"
-    is_simple <- fit$h.nlevels[1] > length(fit$gamma2)
+    is_simple <- length(fit$gamma2) == 1
     
-    rnm <- paste("Level:", tail(fit$h.names,1))
-    g <- rownames(fit$H)
+    rnm <- paste("Level:", paste0(tail(fit$h.names,1)," "))
     
-    d4 <- data.frame(Gamma = sqrt(fit$gamma2),
-                     row.names = paste0(if(!is_simple) g else "",
+    clnm <- clean_GH_names(fit, G=FALSE)
+    
+    d4 <- data.frame(Gamma = sqrt(fit$gamma2), 
+                     row.names = paste0(if(!is_simple) clnm else fit$h.names[1],
                                         paste(if(is_diag)"(Uncor." 
-                                              else "(Cor.",fit$h.names[1],"random) "))) 
+                                              else "(Cor.","random) "))) 
     
     d4 <- rbind(NA, d4)
     rownames(d4)[1] <- rnm
     
     d5 <- data.frame(Phi = fit$phi, 
-                     row.names = if(!is_simple & !is_un) paste0(h,"(",paste0(g,collapse=','),") ") 
-                     else if(is_un) apply(combn(g,2),2,paste0,collapse="~ ") 
-                     else paste0(h, "(",paste0(fit$h.names[1]),") "))
- 
-     } else { d4 <- NULL; d5 <- NULL}
+                     row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~ ")
+                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = 20),") "))
+    
+  } else { d4 <- NULL; d5 <- NULL}
   
   u <- get_error_rho(fit)
   cte <- length(u) == 1
   
   d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
-    row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")")) 
+                   row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")")) 
   
   out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5, d6), digits = digits)
   
@@ -1550,7 +1550,31 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   
   add_column(out, Sig. = Signif, .after = "p-value")
 }
-                     
+ 
+#=================================================================================================================================================
+                                      
+random_GH_form <- function(fit, G = TRUE){
+  
+  fm <- fit$random
+  if(G) fm[[1]] else fm[[2]]
+  
+}
+
+#=================================================================================================================================================
+                                      
+clean_GH_names <- function(fit, G = TRUE) {
+  
+  fmla <- random_GH_form(fit, G = G)
+  vec <- if(G) rownames(fit$G) else rownames(fit$H)
+  
+  v1 <- all.vars(fmla)
+  v2 <- setdiff(vec, v1)
+  v1 <- paste0('^', v1)
+  v3 <- sub(paste(v1, collapse = "|"), "", v2)
+  vec[vec %in% v2] <- v3
+  vec[vec=="intrcpt"] <- "Intercept"
+  return(vec)
+}                                      
 #=================================================================================================================================================                                
   
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp','emmeans','tidyverse')      
