@@ -1428,7 +1428,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     is_diag <- fit$struct[1] == "DIAG"
     is_simple <- fit$g.nlevels[1] > length(fit$tau2)
     
-    rnm <- paste("Level:", fit$g.names[2])
+    rnm <- paste("Level:", tail(fit$g.names,1))
     g <- rownames(fit$G)
    
     d2 <- data.frame(Tau = sqrt(fit$tau2), 
@@ -1453,7 +1453,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = ""){
     is_diag <- fit$struct[2] == "DIAG"
     is_simple <- fit$h.nlevels[1] > length(fit$gamma2)
     
-    rnm <- paste("Level:", fit$h.names[2])
+    rnm <- paste("Level:", tail(fit$h.names,1))
     g <- rownames(fit$H)
     
     d4 <- data.frame(Gamma = sqrt(fit$gamma2),
