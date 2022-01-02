@@ -1505,11 +1505,13 @@ roundi <- function(x, digits = 7){
                    
 #=================================================================================================================================================
                    
-mc_rma <- function(fit, specs, by = NULL, infer = c(TRUE, TRUE), horiz = TRUE, 
+mc_rma <- function(fit, specs, by = NULL, horiz = TRUE, 
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", ...){
   
   fit <- rma2gls(fit)
+  
+  infer <- c(TRUE, TRUE)
   
   ems <- emmeans(object = fit, specs = specs, infer = infer)
 
@@ -1517,7 +1519,7 @@ mc_rma <- function(fit, specs, by = NULL, infer = c(TRUE, TRUE), horiz = TRUE,
 
   out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
   
-  names(out) <- c("Contrast","Estimate","SE","t-value","Df","p-value","Lower","Upper")
+  names(out) <- c("Hypothesis","Estimate","SE","t-value","Df","p-value","Lower","Upper")
   
   p.values <- as.numeric(out$"p-value")
   Signif <- symnum(p.values, corr = FALSE, 
@@ -1540,7 +1542,7 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
                                  test=test, tidy=TRUE, ...))[-c(2,4)], digits)
   
-  out <- setNames(out, c("Contrast","F-value","Df1","Df2","p-value"))
+  out <- setNames(out, c("Hypothesis","F-value","Df1","Df2","p-value"))
   
   p.values <- as.numeric(out$"p-value")
   Signif <- symnum(p.values, corr = FALSE, 
