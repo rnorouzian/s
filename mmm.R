@@ -1037,16 +1037,24 @@ map_dfr(lstt, function(i)
 #=================================================================================================================================================
           
 fixed_form_rma <- function(fit){ 
-   
+  
   a <- fit$formula.yi
   b <- fit$formula.mods
   y <- fit$call$yi
   
-   if(!is.null(a) & !is.null(b)) a 
+  if(!is.null(a) & !is.null(b)) a 
   else if(!is.null(a) & is.null(b)) a
   else if(is.null(a) & !is.null(b)) as.formula(paste(as.character(y), paste(as.character(b), collapse = "")))
+  else as.formula(paste(as.character(y), "~ 1"))
 }
 
+#=================================================================================================================================================  
+  
+shorten_ <- function(vec, n = 3) { 
+  
+  gsub("\\s+", "", 
+       sub(sprintf("^(([^,]+, ){%s}).*, ([^,]+)$", n), "\\1...,\\3", toString(vec)))  
+}  
 #=================================================================================================================================================  
 
 plot.efflist <- function (x, selection, rows, cols, graphics = TRUE, 
@@ -1158,6 +1166,13 @@ cor_comb <- function(data, var1, var2) {
    dat
 }  
  
+#=================================================================================================================================================
+  
+random_left <- function(random_fml) {
+    
+  as.formula(as.character(parse(text = sub("\\|.*", "", random_fml))))
+  
+}
   
 #=================================================================================================================================================
   
@@ -1362,21 +1377,17 @@ clean_reg_names <- function(fit) {
   fmla <- fixed_form_rma(fit)
   vec <- rownames(fit$b)
   
-  v1 <- all.vars(fmla)
-  v2 <- setdiff(vec, v1)
-  v1 <- paste0('^', v1)
-  v3 <- sub(paste(v1, collapse = "|"), "", v2)
-  vec[vec %in% v2] <- v3
-  vec[vec=="intrcpt"] <- if(fit$int.only) "Overall Effect" else "Intercept"
+  vec <- clean_reg(fmla, vec)
+  if(fit$int.only) vec[vec=="Intercept"||vec==""] <- "Overall Effect"
   rownames(fit$b) <- vec
   rownames(fit$beta) <- vec
   rownames(fit$vb) <- colnames(fit$vb) <- vec
   return(fit)
-}       
+}     
   
 #=================================================================================================================================================       
        
-results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", width_G = 20, width_H = 20){
+results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 3){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   
@@ -1396,7 +1407,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", width_
     
     nm <- c("Estimate","SE","t-value","Df","p-value","Lower","Upper")
     
-    nm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value"; nm[-4] }
+    nm <- if(fit$test == "t") { nm } else { nm[3] <- "z-value";
+    nm[-4] }
     
     setNames(a, nm)
     
@@ -1433,15 +1445,15 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", width_
     
     d2 <- data.frame(Tau = sqrt(fit$tau2), 
                      row.names = paste0(if(!is_simple) clnm else fit$g.names[1],
-                                        paste(if(is_diag)"(Uncor." 
-                                              else "(Cor.","random)")))
+                                        paste0(if(is_diag)"(Uncor." 
+                                               else "(Cor.",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1])," random)")))
     
     d2 <- rbind(NA, d2)
     rownames(d2)[1] <- rnm
     
     d3 <- data.frame(Rho = fit$rho, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~") 
-                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = width_G),")")) 
+                     else paste0(h,"(",shorten_(clnm, num_shown),")")) 
     
   } else { d2 <- NULL; d3 <- NULL}
   
@@ -1459,15 +1471,15 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", width_
     
     d4 <- data.frame(Gamma = sqrt(fit$gamma2), 
                      row.names = paste0(if(!is_simple) clnm else fit$h.names[1],
-                                        paste(if(is_diag)"(Uncor." 
-                                              else "(Cor.","random) "))) 
+                                        paste0(if(is_diag)"(Uncor." 
+                                               else "(Cor.",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1])," random) "))) 
     
     d4 <- rbind(NA, d4)
     rownames(d4)[1] <- rnm
     
     d5 <- data.frame(Phi = fit$phi, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~ ")
-                     else paste0(h,"(",toString(paste0(clnm,collapse=','), width = width_H),") "))
+                     else paste0(h,"(",shorten_(clnm, num_shown),") "))
     
   } else { d4 <- NULL; d5 <- NULL}
   
@@ -1566,19 +1578,24 @@ random_GH_form <- function(fit, G = TRUE){
                                       
 clean_GH_names <- function(fit, G = TRUE) {
   
-  fmla <- random_GH_form(fit, G = G)
+  fmla <- random_left(random_GH_form(fit, G = G))
   vec <- if(G) rownames(fit$G) else rownames(fit$H)
+  clean_reg(fmla, vec)
   
-  v1 <- all.vars(fmla)
-  v2 <- setdiff(vec, v1)
-  v1 <- paste0('^', v1)
-  v3 <- sub(paste(v1, collapse = "|"), "", v2)
-  vec[vec %in% v2] <- v3
+}                                     
+#=================================================================================================================================================                                
+clean_reg <- function(fm, nm) {
+  vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
+  subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
+  l <- rapply(strsplit(nm, ":"), sub, how = "list",
+              pattern = sprintf("^(%s)(.+)$", subpat), replacement = "\\2")
+  vec <- vapply(l, paste0, "", collapse = ":")
   vec[vec=="intrcpt"] <- "Intercept"
   return(vec)
-}                                      
-#=================================================================================================================================================                                
-  
+}
+#=================================================================================================================================================                                      
+                                      
+                                      
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp','emmeans','tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
