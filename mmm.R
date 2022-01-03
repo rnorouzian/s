@@ -1394,7 +1394,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_sh
   
   fit <- clean_reg_names(fit)
   
-  if(!fixed_eff) cr <- is_crossed(fit)
+  cr <- if(!fixed_eff) is_crossed(fit) else FALSE
   
   if(robust & any(cr) || robust & fixed_eff) { 
     
