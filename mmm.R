@@ -1390,15 +1390,16 @@ clean_reg_names <- function(fit) {
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 3){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  fixed_eff <- is.null(fit$random)
   
   fit <- clean_reg_names(fit)
   
   cr <- is_crossed(fit)
   
-  if(robust & any(cr)) { 
+  if(robust & any(cr) || robust & fixed_eff) { 
     
     robust <- FALSE
-    message("Robust estimation not available for models with crossed random-effects.")
+    message("Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
   }
   
   res <- if(!robust) { 
@@ -1423,12 +1424,15 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_sh
     setNames(a, c("Estimate","SE","Df","p-value","Lower","Upper"))
   }
   
-  res <- rbind(round(res, digits), "(RANDOM)"= rep("", ncol(res)))
+  res <- round(res, digits)     
+  if(fixed_eff) return(res) 
+            
+  res <- rbind(res, "(RANDOM)" = NA)
   
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
-                     row.names = paste0(names(cr),ifelse(cr,"(Cross. random)","(Int. random)"))) 
+                     row.names = paste0(names(cr), ifelse(cr,"(Cross. random)","(Int. random)"))) 
     
   } else { d1 <- NULL}
   
