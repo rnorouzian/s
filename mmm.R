@@ -1387,7 +1387,7 @@ clean_reg_names <- function(fit) {
   
 #=================================================================================================================================================       
        
-  results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 3){
+  results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 2){
     
     if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
     fixed_eff <- is.null(fit$random)
