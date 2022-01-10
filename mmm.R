@@ -1387,7 +1387,7 @@ clean_reg_names <- function(fit) {
   
 #=================================================================================================================================================       
        
-  results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 2){
+  results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", num_shown = 1){
     
     if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
     fixed_eff <- is.null(fit$random)
@@ -1592,7 +1592,7 @@ clean_GH_names <- function(fit, G = TRUE) {
   
 }                                     
 #=================================================================================================================================================                                
-clean_reg <- function(fm, nm) {
+clean_reg2 <- function(fm, nm) {
   vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
   subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
   l <- rapply(strsplit(nm, ":"), sub, how = "list",
@@ -1601,6 +1601,19 @@ clean_reg <- function(fm, nm) {
   vec[vec=="intrcpt"] <- "Intercept"
   return(vec)
 }
+                       
+#=================================================================================================================================================
+                       
+clean_reg <- function(fmla, vec) {
+  v1 <- as.character(attr(terms(fmla), "variables"))[-1L] 
+  v2 <- setdiff(vec, v1)
+  v1 <- gsub(r"(([\^$.?*|+()[{]))", r"(\\\1)", v1)
+  v3 <- gsub(paste(v1, collapse = "|"), "", v2)
+  vec[vec %in% v2] <- v3
+  vec[vec=="intrcpt"] <- "Intercept"
+  return(vec) 
+}                       
+                      
 #=================================================================================================================================================                                      
                                       
                                       
