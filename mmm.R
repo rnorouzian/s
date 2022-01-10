@@ -1607,7 +1607,8 @@ clean_reg2 <- function(fm, nm) {
 clean_reg <- function(fmla, vec) {
   v1 <- as.character(attr(terms(fmla), "variables"))[-1L] 
   v2 <- setdiff(vec, v1)
-  v1 <- gsub(r"(([\^$.?*|+()[{]))", r"(\\\1)", v1)
+  #v1 <- gsub(r"(([\^$.?*|+()[{]))", r"(\\\1)", v1)
+  v1 <- gsub("([\\\\^$.?*|+()[\\]{}])", "\\\\\\1", v1, perl = TRUE) # For compatibilty for older R versions
   v3 <- gsub(paste(v1, collapse = "|"), "", v2)
   vec[vec %in% v2] <- v3
   vec[vec=="intrcpt"] <- "Intercept"
