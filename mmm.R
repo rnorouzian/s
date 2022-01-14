@@ -1289,7 +1289,8 @@ rma2gls <- function(fit){
   data_. <- eval(fit$call$data)
   form_. <- fixed_form_rma(fit)
   
-  fit2 <- nlme::gls(form_., data = data_., method = fit$method, na.action = "na.omit")
+  fit2 <- nlme::gls(form_., data = data_., method = fit$method, na.action = "na.omit",
+            control = glsControl(singular.ok = TRUE))
   
   fit2$call$model <- form_.
   fit2$call$data <- data_.
