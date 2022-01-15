@@ -1592,16 +1592,6 @@ clean_GH_names <- function(fit, G = TRUE) {
   clean_reg(fmla, vec)
   
 }                                     
-#=================================================================================================================================================                                
-clean_reg2 <- function(fm, nm) {
-  vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
-  subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
-  l <- rapply(strsplit(nm, ":"), sub, how = "list",
-              pattern = sprintf("^(%s)(.+)$", subpat), replacement = "\\2")
-  vec <- vapply(l, paste0, "", collapse = ":")
-  vec[vec=="intrcpt"] <- "Intercept"
-  return(vec)
-}
                        
 #=================================================================================================================================================
                        
@@ -1609,13 +1599,19 @@ clean_reg <- function(fmla, vec) {
   v1 <- as.character(attr(terms(fmla), "variables"))[-1L] 
   v2 <- setdiff(vec, v1)
   #v1 <- gsub(r"(([\^$.?*|+()[{]))", r"(\\\1)", v1)
-  v1 <- gsub("([\\\\^$.?*|+()[\\]{}])", "\\\\\\1", v1, perl = TRUE) # For compatibilty for older R versions
+  v1 <- gsub("([\\\\^$.?*|+()[\\]{}])", "\\\\\\1", v1, perl = TRUE) # For compatibilty with older R versions
   v3 <- gsub(paste(v1, collapse = "|"), "", v2)
   vec[vec %in% v2] <- v3
   vec[vec=="intrcpt"] <- "Intercept"
   return(vec) 
 }                       
-                      
+
+#=================================================================================================================================================                       
+set_rownames <- function (object = nm, nm) 
+{
+  rownames(object) <- nm
+  object
+}                       
 #=================================================================================================================================================                                      
                                       
                                       
