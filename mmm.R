@@ -1535,6 +1535,7 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   
   dat_ <- eval(fit$call$data)
   lm_fit <- lm(fixed_form_rma(fit), data = dat_, na.action = "na.omit")
+  lm_fit$call$data <- dat_
   
   is_singular <- anyNA(coef(lm_fit))
   
