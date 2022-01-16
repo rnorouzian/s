@@ -1530,14 +1530,30 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", ...){
   
+  
+  if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  
+  dat_ <- eval(fit$call$data)
+  lm_fit <- lm(fixed_form_rma(fit), data = dat_, na.action = "na.omit")
+  
+  is_singular <- anyNA(coef(lm_fit))
+  
   fit <- rma2gls(fit)
+  
+  if(is_singular) { 
+    
+    fit$coefficients <- replace(lm_fit$coefficients, !is.na(lm_fit$coefficients), fit$coefficients)
+  
+    fit <- suppressMessages(emmeans::ref_grid(fit))
+    fit@nbasis <- suppressMessages(emmeans::ref_grid(lm_fit)@nbasis)
+  }
   
   infer <- c(TRUE, TRUE)
   
   ems <- emmeans(object = fit, specs = specs, infer = infer)
-
+  
   if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab, ...)) 
-
+  
   out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
   
   names(out) <- c("Hypothesis","Estimate","SE","t-value","Df","p-value","Lower","Upper")
@@ -1551,7 +1567,7 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   out <- add_column(out, Sig. = Signif, .after = "p-value")
   
   roundi(out, digits = digits)
-}        
+}       
   
                      
 #=================================================================================================================================================
