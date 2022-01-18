@@ -1109,30 +1109,21 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
 {
   
   if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
+
+  lm_fit <- lm(fixed_form_rma(fit), data = eval(fit$call$data), na.action = "na.omit")
+  
+  is_singular <- anyNA(coef(lm_fit))
   
   fit2 <- rma2gls(fit)
   
-#  if(robust) { 
+  if(is_singular) { 
     
-#    is_rmv <- inherits(fit,"rma.mv") 
-    
-#    if(is_rmv){   
-#      mm <- try(clubSandwich:::findCluster.rma.mv(fit), silent = TRUE)
-      
-#      is_bad_for_sandwich <- inherits(mm, "try-error")
-      
-#    } else { is_bad_for_sandwich <- FALSE }
-    
-#    if(is_bad_for_sandwich) message("Robust estimation was infeasible.\n")
-    
-#    if(!is_rmv) cluster <- rownames(data_.)
-    
-#    if(!is_bad_for_sandwich) fit2$varBeta <- vcovCR(fit, cluster=cluster, type="CR2")
-#  }
+    fit2$coefficients <- replace(lm_fit$coefficients, !is.na(lm_fit$coefficients), fit2$coefficients)
+  }
   
-x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
+  x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
   
-x <- if(!is.null(index)) x[index] else x
+  x <- if(!is.null(index)) x[index] else x
   
   if(plot){   
     xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
@@ -1154,6 +1145,7 @@ x <- if(!is.null(index)) x[index] else x
     return(x)
   }
 }
+
 
 #=================================================================================================================================================
   
@@ -1544,7 +1536,7 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   if(is_singular) { 
     
     fit$coefficients <- replace(lm_fit$coefficients, !is.na(lm_fit$coefficients), fit$coefficients)
-  
+    
     fit <- suppressMessages(emmeans::ref_grid(fit))
     fit@nbasis <- suppressMessages(emmeans::ref_grid(lm_fit)@nbasis)
   }
@@ -1552,6 +1544,10 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   infer <- c(TRUE, TRUE)
   
   ems <- emmeans(object = fit, specs = specs, infer = infer)
+  
+  is_pair <- "pairwise" %in% as.character(specs)
+  
+  if(is_pair){
   
   if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab, ...)) 
   
@@ -1568,7 +1564,13 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   out <- add_column(out, Sig. = Signif, .after = "p-value")
   
   roundi(out, digits = digits)
-}       
+  }
+  
+  else {
+    
+    ems
+  }
+}      
   
                      
 #=================================================================================================================================================
