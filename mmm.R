@@ -1540,7 +1540,8 @@ roundi <- function(x, digits = 7){
                    
 mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE, 
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
-                   reverse = TRUE, digits = 3, xlab = "Estimated Effect", ...){
+                   reverse = TRUE, digits = 3, xlab = "Estimated Effect", 
+                   shift_up = NULL, shift_down = NULL, drop_rows = NULL, ...){
   
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
@@ -1563,16 +1564,16 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
   
   infer <- c(TRUE, TRUE)
   
-ems <- if(is.null(var)){
+  ems <- if(is.null(var)){
+    
+    emmeans(object = fit, specs = specs, infer = infer, ...)
+    
+  } else {
+    
+    emtrends(object = fit, specs = specs, var = var, infer = infer, ...)
+    
+  }
   
-   emmeans(object = fit, specs = specs, infer = infer, ...)
-  
-} else {
-  
-   emtrends(object = fit, specs = specs, var = var, infer = infer, ...)
-  
-}
-
   is_pair <- "pairwise" %in% as.character(specs)
   
   if(is_pair){
@@ -1591,24 +1592,30 @@ ems <- if(is.null(var)){
     
     out <- add_column(out, Sig. = Signif, .after = "p-value")
     
-    roundi(out, digits = digits)
+    out <- roundi(out, digits = digits)
+    
+    if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
+    if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
+    if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+    return(out)
   }
   
   else {
     
     ems
   }
-}      
+}     
   
                      
 #=================================================================================================================================================
                      
-mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3, ...){
+mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
+                          shift_up = NULL, shift_down = NULL, drop_rows = NULL, ...){
   
   obj <- clean_reg_names(fit)
   
   out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
-                                 test=test, tidy=TRUE, ...))[-c(2,4)], digits)
+                                        test=test, tidy=TRUE, ...))[-c(2,4)], digits)
   
   out <- setNames(out, c("Hypothesis","F-value","Df1","Df2","p-value"))
   
@@ -1618,7 +1625,11 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
-  add_column(out, Sig. = Signif, .after = "p-value")
+  out <- add_column(out, Sig. = Signif, .after = "p-value")
+  if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
+  if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
+  if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+  return(out)
 }
  
 #=================================================================================================================================================
