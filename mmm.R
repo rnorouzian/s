@@ -1518,7 +1518,7 @@ roundi <- function(x, digits = 7){
                    
 #=================================================================================================================================================
                    
-mc_rma <- function(fit, specs, by = NULL, horiz = TRUE, 
+mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE, 
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", ...){
   
@@ -1543,27 +1543,35 @@ mc_rma <- function(fit, specs, by = NULL, horiz = TRUE,
   
   infer <- c(TRUE, TRUE)
   
-  ems <- emmeans(object = fit, specs = specs, infer = infer)
+ems <- if(is.null(var)){
   
+   emmeans(object = fit, specs = specs, infer = infer, ...)
+  
+} else {
+  
+   emtrends(object = fit, specs = specs, var = var, infer = infer, ...)
+  
+}
+
   is_pair <- "pairwise" %in% as.character(specs)
   
   if(is_pair){
-  
-  if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab, ...)) 
-  
-  out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
-  
-  names(out) <- c("Hypothesis","Estimate","SE","t-value","Df","p-value","Lower","Upper")
-  
-  p.values <- as.numeric(out$"p-value")
-  Signif <- symnum(p.values, corr = FALSE, 
-                   na = FALSE, cutpoints = 
-                     c(0, 0.001, 0.01, 0.05, 0.1, 1), 
-                   symbols = c("***", "**", "*", ".", " "))
-  
-  out <- add_column(out, Sig. = Signif, .after = "p-value")
-  
-  roundi(out, digits = digits)
+    
+    if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab)) 
+    
+    out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
+    
+    names(out) <- c("Hypothesis","Estimate","SE","t-value","Df","p-value","Lower","Upper")
+    
+    p.values <- as.numeric(out$"p-value")
+    Signif <- symnum(p.values, corr = FALSE, 
+                     na = FALSE, cutpoints = 
+                       c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                     symbols = c("***", "**", "*", ".", " "))
+    
+    out <- add_column(out, Sig. = Signif, .after = "p-value")
+    
+    roundi(out, digits = digits)
   }
   
   else {
