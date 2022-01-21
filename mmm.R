@@ -1434,10 +1434,24 @@ clean_reg_names <- function(fit) {
   d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
                    row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")"))
   
+  qq <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
+                   pval = fit$QEp, row.names = "QE") %>%
+    dplyr::rename("p-value"="pval") 
+  
+  res <- bind_rows(res, qq)
+  
   if(fixed_eff) { 
     
     out <- roundi(dplyr::bind_rows(res, d6), digits = digits)
     out[is.na(out)] <- blank_sign
+    
+    p.values <- as.numeric(out$"p-value")
+    Signif <- symnum(p.values, corr = FALSE, 
+                     na = FALSE, cutpoints = 
+                       c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                     symbols = c("***", "**", "*", ".", " "))
+    
+    out <- add_column(out, Sig. = Signif, .after = "p-value")
     
     if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
@@ -1522,7 +1536,6 @@ clean_reg_names <- function(fit) {
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
   return(out)
 }
-
 #=================================================================================================================================================                   
                    
 roundi <- function(x, digits = 7){
