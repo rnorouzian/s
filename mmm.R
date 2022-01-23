@@ -816,9 +816,9 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
                                 view = 1, pos = 2)
 {
   
-  if(!inherits(fit,c("rma.mv"))) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  if(!inherits(fit,c("rma"))) stop("Model is not 'rma' object.", call. = FALSE)
   datziola <- clubSandwich:::getData(fit) %>%
-  mutate(obsss = row_number())
+    mutate(obsss = row_number())
   
   
   # Check Hat values (weight-leveraging effects)
@@ -859,16 +859,19 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   # Make visual size of effects proportional to their hat/cook's distance (estimate influence)
   cex <- cex_add_point+cex_multi_point*sqrt(if(view == 1)cook else hat)
   
+  outlier_limits <- qnorm(c(.025,.5,.975))
+  ylim <- range(c(outlier_limits, range(st_del_res_z)))
+  
   # Plot Leverage against Studentized residuals proportioned on cook's distances
   plot(if(view == 1) hat else cook, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
-       xlab=if(view == 1) "Leverage (Hat Value)" else "Effect Influence (Cook's Dis.)", 
-       ylab="Outlier (Studentized Del. Value)",pch=19,cex.axis = .9,tcl = -.3,
-       col = adjustcolor(1, .5))
+       xlab = if(view == 1) "Leverage (Hat Value)" else "Effect Influence (Cook's Dis.)", 
+       ylab = "Outlier (Studentized Del. Value)",pch=19,cex.axis = .9,tcl = -.3,
+        col = adjustcolor(1, .5),
+       ylim = ylim)
+  
   title(if(view == 1) "Size of points denote \nestimate-influencing effects\n (Cook's distances)" 
         else "Size of points denote \nleverage effects\n (Hat value)", 
         cex.main = cex_main, line = .3)
-  
-  outlier_limits <- qnorm(c(.025,.5,.975))
   
   abline(h=outlier_limits, lty=c(3,1,3), lwd=c(1,2,1))
   
@@ -876,7 +879,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   
   max_cook <- max(mean(range(cook)), boxplot.stats(cook, coef = whisker_coef)$stats[5])
   
-   abline(v = if(view == 1) max_hat else max_cook, col=2)
+  abline(v = if(view == 1) max_hat else max_cook, col=2)
   
   # To be outlier, an estimate must simultaneously (a) be outlying (per studentized value)
   # (b) have high leverage (per hat value), and (c) high model influence (per cook's distance)
