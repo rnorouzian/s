@@ -96,6 +96,21 @@ inter_index <- function(fit){
   nm <- rownames(fit$b)
   grep(":", nm)
 }     
+
+#===============================================================================================================================
+     
+bet_with <- function(data, contrast_col = Hypothesis) 
+  {
+  
+out <- data %>%
+    as_tibble %>%
+    separate({{contrast_col}}, into = c('pre', 'post'), sep = "\\s+-\\s+", remove = FALSE) %>%
+    mutate(across(pre:post, ~ map(str_extract_all(., "[A-Za-z0-9-]+\\s*\\d*"), trimws))) %>% 
+    filter(lengths(map2(pre, post, intersect)) > 0) %>%
+    select(-pre, -post)
+
+as.data.frame(out)
+}     
      
 #===============================================================================================================================
            
@@ -1614,7 +1629,8 @@ roundi <- function(x, digits = 7){
 mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE, 
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", 
-                   shift_up = NULL, shift_down = NULL, drop_rows = NULL, ...){
+                   shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
+                   drop_cols = NULL, full = FALSE, ...){
   
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
@@ -1670,6 +1686,12 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+    
+    
+    if(!full) out <- bet_with(out, Hypothesis)
+    
+    out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+    
     return(out)
   }
   
@@ -1677,7 +1699,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     
     ems
   }
-}     
+}      
   
                      
 #=================================================================================================================================================
