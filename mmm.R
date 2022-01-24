@@ -89,7 +89,14 @@ is_crossed <- function(obj){
   out <- !clubSandwich:::test_nested(cluster, fac = mod_struct$cluster_dat)
   out[names(out) %in% obj$s.names]
 }
-                    
+     
+#===============================================================================================================================
+     
+inter_index <- function(fit){
+  nm <- rownames(fit$b)
+  grep(":", nm)
+}     
+     
 #===============================================================================================================================
            
 pluralify_ <- function (x, keep.original = FALSE, 
