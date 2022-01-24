@@ -1427,7 +1427,7 @@ clean_reg_names <- function(fit) {
        
   results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
-                        drop_rows = NULL, QE = FALSE, sig = FALSE){
+                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   fixed_eff <- is.null(fit$random)
@@ -1471,11 +1471,11 @@ clean_reg_names <- function(fit) {
                    row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")"))
   
   if(QE){
-  qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
-                   pval = fit$QEp, row.names = "QE") %>%
-    dplyr::rename("p-value"="pval") 
-  
-  res <- bind_rows(res, qe)
+    qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
+                     pval = fit$QEp, row.names = "QE") %>%
+      dplyr::rename("p-value"="pval") 
+    
+    res <- bind_rows(res, qe)
   }
   
   
@@ -1483,22 +1483,24 @@ clean_reg_names <- function(fit) {
     
     out <- roundi(dplyr::bind_rows(res, d6), digits = digits)
     out[is.na(out)] <- blank_sign
-   
+    
     if(sig){ 
       
       p.values <- as.numeric(out$"p-value")
       
       Signif <- symnum(p.values, corr = FALSE, 
-                     na = FALSE, cutpoints = 
-                       c(0, 0.001, 0.01, 0.05, 0.1, 1), 
-                     symbols = c("***", "**", "*", ".", " ")) 
-    
-    out <- add_column(out, Sig. = Signif, .after = "p-value")
+                       na = FALSE, cutpoints = 
+                         c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                       symbols = c("***", "**", "*", ".", " ")) 
+      
+      out <- add_column(out, Sig. = Signif, .after = "p-value")
     }
     
     if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+    
+    out <- dplyr::select(out, -drop_cols)
     
     return(out)
   }
@@ -1582,7 +1584,9 @@ clean_reg_names <- function(fit) {
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
-                     
+  
+  out <- dplyr::select(out, -drop_cols)
+  
   return(out)
 }
 #=================================================================================================================================================                   
