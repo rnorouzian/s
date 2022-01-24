@@ -1507,7 +1507,7 @@ clean_reg_names <- function(fit) {
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
     
-    out <- dplyr::select(out, -drop_cols)
+    out <- dplyr::select(out, -all_off(drop_cols))
     
     return(out)
   }
@@ -1592,7 +1592,7 @@ clean_reg_names <- function(fit) {
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
   
-  out <- dplyr::select(out, -drop_cols)
+  out <- dplyr::select(out, -all_off(drop_cols))
   
   return(out)
 }
