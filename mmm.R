@@ -1432,7 +1432,7 @@ clean_reg_names <- function(fit) {
   
 #=================================================================================================================================================       
        
-  results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
+results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
                         drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE){
   
@@ -1507,7 +1507,7 @@ clean_reg_names <- function(fit) {
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
     
-    out <- dplyr::select(out, -all_off(drop_cols))
+    out <- dplyr::select(out, -dplyr::all_of(drop_cols))
     
     return(out)
   }
@@ -1592,7 +1592,7 @@ clean_reg_names <- function(fit) {
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
   
-  out <- dplyr::select(out, -all_off(drop_cols))
+  out <- dplyr::select(out, -dplyr::all_of(drop_cols))
   
   return(out)
 }
