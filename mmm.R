@@ -109,7 +109,36 @@ pluralify_ <- function (x, keep.original = FALSE,
   }, out)
   
 }           
-                                 
+  
+#================================================================================================================================     
+     
+add_sig_funnel <- function(funnel, level=.95, col="magenta", 
+                           pch=21, bg="cyan", digits=2, ...){
+  
+right <- (1 - level)/2   
+
+x <- funnel$x
+y <- funnel$y
+crit <- qnorm(right, lower.tail = FALSE)
+
+ci1 <- crit*y
+x1 <- x[x > ci1]
+y1 <- y[x > ci1]
+
+points(x1, y1, col=col, pch=pch, bg=bg, ...)
+
+ci2 <- -crit*y
+x2 <- x[x < ci2]
+y2 <- y[x < ci2]
+
+points(x2, y2, col=col, pch=pch, bg=bg, ...)
+
+out <- data.frame(left = length(x2), percent_left = length(x2) / length(x)*100,
+                  right = length(x1), percent_right = length(x1) / length(x)*100)
+
+round(setNames(out, c("Left","Left(%)","Right","Right(%)")), digits = digits)
+}     
+     
 #================================================================================================================================   
            
 cat_overlap <- function(data, study_id, ...){
