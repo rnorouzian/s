@@ -1634,6 +1634,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
   
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  if(length(inter_index(fit))==0) full <- TRUE
   
   dat_ <- eval(fit$call$data)
   lm_fit <- lm(fixed_form_rma(fit), data = dat_, na.action = "na.omit")
@@ -1686,7 +1687,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
-      
+    
     if(!full) out <- bet_with(out, Hypothesis)
     
     out <- dplyr::select(out, -dplyr::all_of(drop_cols))
