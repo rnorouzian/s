@@ -162,6 +162,24 @@ add_sig_funnel <- function(funnel, level=.95, col="magenta",
   
   round(setNames(out, c("total","total(%)","Left","Left(%)","Right","Right(%)")), digits = digits)
 } 
+
+     
+#================================================================================================================================
+     
+contour_funnel <- function(fit, level = c(95, 99),
+                           shade = c("white","gray50"),
+                           xlab = "Effect Size", sig = TRUE,
+                           yaxis = "sei", ...){
+yaxis <- "sei"
+f1 <- metafor::funnel.default(x = fit$yi,
+                             vi = fit$vi,
+                          level = level, 
+                          shade = shade,
+                           xlab = xlab, 
+                          yaxis = yaxis, ...)
+  
+if(sig) suppressMessages(suppressWarnings(add_sig_funnel(f1, ...)))  
+}     
      
 #================================================================================================================================   
            
