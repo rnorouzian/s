@@ -939,7 +939,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   # Plot Leverage against Studentized residuals proportioned on cook's distances
   plot(if(view == 1) hat else cook, st_del_res_z, cex=cex, las=1, mgp=c(1.5,.3,0),
        xlab = if(view == 1) "Leverage (Hat Value)" else "Effect Influence (Cook's Dis.)", 
-       ylab = "Outlier (Studentized Del. Value)",pch=19,cex.axis = .9,tcl = -.3,
+       ylab = "Outlier (Standardized Del. Value)",pch=19,cex.axis = .9,tcl = -.3,
         col = adjustcolor(1, .5),
        ylim = ylim)
   
