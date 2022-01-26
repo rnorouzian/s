@@ -1470,12 +1470,13 @@ clean_reg_names <- function(fit) {
        
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
-                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE){
+                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
+                        clean_names = TRUE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   fixed_eff <- is.null(fit$random)
   
-  fit <- clean_reg_names(fit)
+  if(clean_names) fit <- clean_reg_names(fit)
   
   cr <- if(!fixed_eff) is_crossed(fit) else FALSE
   
@@ -1726,9 +1727,10 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
 #=================================================================================================================================================
                      
 mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
-                          shift_up = NULL, shift_down = NULL, drop_rows = NULL, ...){
+                          shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
+                          clean_names = TRUE, ...){
   
-  obj <- clean_reg_names(fit)
+  if(clean_names) obj <- clean_reg_names(fit)
   
   out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
                                         test=test, tidy=TRUE, ...))[-c(2,4)], digits)
