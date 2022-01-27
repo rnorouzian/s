@@ -1771,7 +1771,7 @@ clean_GH_names <- function(fit, G = TRUE) {
                        
 #=================================================================================================================================================
                        
-clean_reg <- function(fmla, vec) {
+clean_reg2 <- function(fmla, vec) {
   v1 <- as.character(attr(terms(fmla), "variables"))[-1L] 
   v2 <- setdiff(vec, v1)
   #v1 <- gsub(r"(([\^$.?*|+()[{]))", r"(\\\1)", v1)
@@ -1782,6 +1782,20 @@ clean_reg <- function(fmla, vec) {
   return(vec) 
 }                       
 
+#=================================================================================================================================================                     
+  
+clean_reg <- function(fm, nm) {
+  vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
+  subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
+  l <- rapply(strsplit(nm, ":"), sub, how = "list",
+              perl = TRUE,
+              pattern = sprintf("^(?!(%1$s)$)(%1$s)(.+)$", subpat),
+              replacement = "\\3")
+  vec <- vapply(l, paste0, "", collapse = ":")
+  vec[vec=="intrcpt"] <- "Intercept"
+  return(vec)
+}                     
+                                        
 #=================================================================================================================================================                       
 set_rownames <- function (object = nm, nm) 
 {
