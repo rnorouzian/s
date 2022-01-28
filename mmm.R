@@ -1554,7 +1554,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
-                     row.names = paste0(names(cr), ifelse(cr,"(Cross. random)","(Int. random)"))) 
+                     row.names = paste0(names(cr), ifelse(cr,"(Crossed)","(Intercept)"))) 
     
   } else { d1 <- NULL}
   
@@ -1572,7 +1572,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     d2 <- data.frame(Tau = sqrt(fit$tau2), 
                      row.names = paste0(if(!is_simple) clnm else fit$g.names[1],
                                         paste0(if(is_diag)"(Uncor." 
-                                               else "(Cor.",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1])," random)")))
+                                               else "(Cor.",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1]),")")))
     
     d2 <- rbind(NA, d2)
     rownames(d2)[1] <- rnm
@@ -1598,7 +1598,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     d4 <- data.frame(Gamma = sqrt(fit$gamma2), 
                      row.names = paste0(if(!is_simple) clnm else fit$h.names[1],
                                         paste0(if(is_diag)"(Uncor." 
-                                               else "(Cor.",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1])," random) "))) 
+                                               else "(Cor.",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1]),") "))) 
     
     d4 <- rbind(NA, d4)
     rownames(d4)[1] <- rnm
