@@ -1193,11 +1193,11 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
                             lwd, ylim, xlim, factor.names, band.transparency, 
                             band.colors, grid=TRUE, axes, lattice, rotx, roty,
                             symbols=list(pch = 19), ticks.x, lines=TRUE, robust=FALSE,
-                            cluster, plot=TRUE, ...) 
+                            cluster, plot=TRUE, int_only = FALSE, ...) 
 {
   
   if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
-
+  
   lm_fit <- lm(fixed_form_rma(fit), data = eval(fit$call$data), na.action = "na.omit")
   
   is_singular <- anyNA(coef(lm_fit))
@@ -1211,7 +1211,7 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
   
   x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
   
-  x <- if(!is.null(index)) x[index] else x
+  x <- if(!is.null(index)) x[index] else if(int_only) x[grep(":",names(x))] else x
   
   if(plot){   
     xcv <- plot(x, multiline=multiline, main=main, rug=FALSE,
@@ -1224,13 +1224,13 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
     xcv$x.scales$tck=c(1,0)
     xcv$y.scales$tck=c(1,0)
     
-   invisible(return(x))
+    invisible(return(x))
     
-   xcv 
+    xcv 
     
   } else {
     
-   invisible(return(x))
+    invisible(return(x))
   }
 }
 
