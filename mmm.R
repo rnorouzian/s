@@ -1801,10 +1801,364 @@ set_rownames <- function (object = nm, nm)
 {
   rownames(object) <- nm
   object
-}                       
+}       
+                     
 #=================================================================================================================================================                                      
-                                      
-                                      
+#=================================================================================================================================================
+#=================================================================================================================================================
+                     
+round_effects <- function(data, digits, yi_vi_names = c("yi","vi")){
+  
+  eff <- names(data) %in% yi_vi_names
+  data[eff] <- lapply(data[eff], round, digits)
+  return(data)
+}
+
+#==============
+
+random_rows <- function(x) {
+  
+  is_char <- is.character(x) 
+  is_fact <- is.factor(x)
+  
+  unique_levels <- if(is_fact) levels(x) else unique(x)
+  
+  r_min <- if(is_char|is_fact) 0 else min(unique_levels)-1 
+  r <- c(r_min, unique_levels)
+  n <- sample(r, 1)
+  #If n = r[1] select all rows else 
+  #select row for corresponding x value
+  if(n == r[1]) TRUE else x == n
+}
+
+#================
+
+sample_order <- function(data, vars, cat_var_to_remove = "time"){
+  g_by <- vars[1]
+  vars <- setdiff(vars, c(g_by, cat_var_to_remove))
+  
+  Fn <- function(data, var, g_by) { 
+    data %>% 
+      group_by(.data[[g_by]]) %>% 
+      filter(random_rows(.data[[var]])) %>% 
+      ungroup() %>% as.data.frame() 
+  }
+  purrr::reduce(vars, Fn, g_by, .init=data) %>%
+    group_by(.data[[g_by]]) %>% 
+    mutate(across(all_of(vars), 
+                  function(x) if(is.numeric(x)) 
+                    as.numeric(as.factor(x)) else x)) %>%
+                              as.data.frame()
+}
+
+
+
+#==============
+
+rbetab <- function(n, mu.p, disp){
+  
+  if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+    mu.p[mu.p < 0] <- 0 ;
+    mu.p[mu.p > 1] <- 1 }
+  
+  shape1 <- mu.p * disp
+  shape2 <- (1 - mu.p) * disp
+  rbeta(n, shape1 = shape1, shape2 = shape2)
+}
+
+#==============
+
+
+sim_rma.mv.dat <- function(..., seed = NULL, mean_sigma = 0.75, sd_df = 1,
+                           cat_var_to_remove = NULL,
+                           n_high_to_row_remove = 1,
+                           drop_levels = NULL, LRR = FALSE, mu.p_sigma = .5,
+                           mu.p_disp = 10, digits = 6, ordered_cat_var_to_remove = TRUE
+){
+  
+  set.seed(seed)
+  dat <- expand_grid(...)
+  
+  dots <- rlang::list2(...) 
+  
+  cat_var_to_remove <- if(!is.null(cat_var_to_remove)){
+    cat_var_to_remove <- rlang::ensym(cat_var_to_remove)
+  } else cat_var_to_remove
+  
+  high_name <- names(dots)[1]
+  
+  
+  rows <- sapply(group_split(dat, !!!rlang::syms(high_name)), nrow)
+  
+ # set.seed(seed)
+  
+  dat <- if(!LRR){
+    mutate(dat, yi = as.vector(unlist(mapply(rnorm, n = rows, 
+                                                   mean = rnorm(rows, mean_sigma, .5), 
+                                                   sd = rchisq(rows, sd_df)))),
+           
+           vi = as.vector(unlist(mapply(runif, n = rows))) )
+  } else {
+    
+    mutate(dat, yi = as.vector(unlist(mapply(rbetab, n = rows, 
+                                             mu.p = rbetab(rows, mu.p_sigma, mu.p_disp), 
+                                             disp = rnbinom(rows, mu.p_disp, mu = mu.p_disp)))),
+           
+           vi = yi * as.vector(unlist(mapply(runif, n = rows, min = .001, max = .9))) )
+  }
+  
+
+  dat <- round_effects(dat, digits)
+
+  
+  if(!is.null(cat_var_to_remove)){ 
+    
+    set.seed(seed)
+    
+    outcome_to_remove <- if(ordered_cat_var_to_remove) sort(unique(dat[[cat_var_to_remove]]))[-(1:2)] else unique(dat[[cat_var_to_remove]])
+    study_available <- unique(dat[[high_name]])
+    
+    
+    for(i in outcome_to_remove) {
+      
+      studies_to_remove <- sample(study_available, size = n_high_to_row_remove)
+      study_available <- setdiff(study_available, studies_to_remove)
+      #message('Dropping ', cat_var_to_remove, " ", i, " in ", high_name, " ", studies_to_remove)
+      dat <- dat %>%
+        filter(
+          !(    .data[[high_name]] %in% studies_to_remove &
+                  if(ordered_cat_var_to_remove) !!cat_var_to_remove  >= i else !!cat_var_to_remove %in% i
+          ))
+    }
+    
+  }
+  
+  #set.seed(seed)
+  
+  dat %>%
+    sample_order(names(dots), cat_var_to_remove) %>%
+  select(-tidyselect::all_of(drop_levels)) %>%
+    mutate(row_id = row_number())
+    
+}
+
+#=======
+
+any_nesting <- function(data, ...){
+  
+input <- is_nestor(data, ...)
+
+nesting. <- unlist(Filter(
+  length,
+  lapply(
+    names(input), 
+    function(i) {
+      k <- which(input[[i]])
+      if (length(k)) paste0(i, '/', names(input[[i]])[k])
+    }
+  )
+))
+
+ if(is.null(nesting.)) nesting. else noquote(nesting.)
+}
+
+#=======
+
+
+hlister <- function(data, highest_level, str_cols){
+  
+  hlist <- data %>%
+  dplyr::group_by(!!!highest_level) %>%
+  dplyr::mutate(grp = dplyr::across(tidyselect::all_of(str_cols), ~ {
+    tmp <- dplyr::n_distinct(.)
+    dplyr::case_when(tmp == 1 ~ 1, tmp == n() ~ 2, tmp > 1 & tmp < n() ~ 3,  TRUE ~ 4)
+  }) %>%
+    purrr::reduce(stringr::str_c, collapse = "")) %>%
+  dplyr::ungroup(.) %>%
+  dplyr::group_split(grp, .keep = FALSE)
+
+Filter(NROW, rev(hlist))
+}
+
+#=======
+
+disply_highest_level_names <- function(res, sss, struc){
+
+typic <- function(vec) vec[ceiling(length(vec)/2)]
+
+lapply(res, function(i){
+  nr <- sapply(split(i, i[[sss]]), nrow);
+  study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
+  } else if(struc == "simple") {min(as.numeric(names(table(nr))))
+  } else {max(as.numeric(names(table(nr))))};
+  names(nr)[nr == study_type][1]
+  })
+}
+
+#=======
+
+
+meta_tree4 <- function(data = NULL, ..., highest_level_name = NULL, reset = TRUE,
+                      structure = c("simple","typical","complex"), 
+                      output_highest_level = FALSE,
+                      toplab = NULL, cex = 1, main = NULL, rowcount = FALSE, 
+                      main_extra_name = FALSE, subset, 
+                      n_high_to_row_remove = 15, cat_var_to_remove = "time", 
+                      ordered_cat_var_to_remove = TRUE, random_rm = TRUE,
+                      drop_levels = NULL, row_id = FALSE, seed = NULL) 
+{
+  
+  
+  if(reset){
+    graphics.off()
+    org.par <- par(no.readonly = TRUE)
+    on.exit(par(org.par))
+  }
+  
+  
+ if(!is.null(data)){
+   
+ data <- rm.colrowNA(trim_(data)) %>%
+    mutate(row_id = row_number())
+
+  dot_cols <- rlang::ensyms(...)
+  str_cols1 <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+  idx <- str_cols1 %in% names(data)
+  if(!all(idx)) stop(toString(dQuote(str_cols1[!idx]))," not found in the 'data'.", call. = FALSE)
+
+  str_cols <- str_cols1[-1]
+
+  highest_level <- dot_cols[[1]]
+
+nesting_suggest <- any_nesting(data, !!!dot_cols)
+
+  ss <- substitute(highest_level)
+  sss <- deparse(ss)
+  
+  
+  if(!missing(subset)){
+    
+    s <- substitute(subset)
+    data <- filter(data, eval(s))
+  }
+  
+  data <- data %>%
+    dplyr::select(!!! dot_cols)# %>%
+    #dplyr::select(-tidyselect::all_of(drop_levels)) 
+  
+ }  else {
+   
+dots <- rlang::list2(...)    
+   
+data <- tidyr::expand_grid(...) 
+if(row_id) data <- mutate(data, row_id = row_number())
+
+dotnames <- names(dots)#[!names(dots) %in% drop_levels]
+str_cols <- dotnames[-1]
+
+highest_level <- rlang::sym(dotnames[1])
+
+ss <- substitute(highest_level)
+sss <- dotnames[1]
+
+if(any(drop_levels %in% sss)) stop("Highest level can't be dropped.", call. = FALSE)
+
+data <- if(random_rm) {
+  
+  cat_var_to_remove <- if(!is.null(cat_var_to_remove)){
+    cat_var_to_remove <- rlang::ensym(cat_var_to_remove)
+  } else {cat_var_to_remove}
+  
+  
+  if(!is.null(cat_var_to_remove)){    
+    
+    outcome_to_remove <- if(ordered_cat_var_to_remove) sort(unique(data[[cat_var_to_remove]]))[-(1:2)] else unique(data[[cat_var_to_remove]])
+    study_available <- unique(data[[sss]])
+    
+    set.seed(seed)
+    
+    for(i in outcome_to_remove) {
+      
+      studies_to_remove <- sample(study_available, size = n_high_to_row_remove)
+      study_available <- setdiff(study_available, studies_to_remove)
+      #message('Dropping ', cat_var_to_remove, " ", i, " in ", high_name, " ", studies_to_remove)
+      data <- data %>%
+        filter(
+          !(    .data[[sss]] %in% studies_to_remove &
+                  if(ordered_cat_var_to_remove) !!cat_var_to_remove  >= i else !!cat_var_to_remove %in% i
+          ))
+    } 
+  }
+  
+  data %>%
+    sample_order(dotnames, cat_var_to_remove) %>%
+   dplyr::select(-tidyselect::all_of(drop_levels)) 
+  
+} else { data }
+
+nesting_suggest <- any_nesting(data, !!!rlang::syms(names(data)))
+
+}
+  str_cols <- str_cols[!(str_cols %in% drop_levels)]
+ 
+if(is.null(highest_level_name)){
+    
+    struc <- match.arg(structure) 
+    
+    res <- hlister(data, highest_level, str_cols)    
+    
+    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
+    
+    nms <- disply_highest_level_names(res, sss, struc)  
+    
+    list2plot <- lapply(seq_along(res),function(i) filter(res[[i]], eval(ss) == nms[i]))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL),
+                      mar = c(2.5, 2.6, 1.8, .5))
+ 
+      }
+    
+    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
+    
+    main <- paste(main_no., main)
+    
+    if(main_extra_name) main <- paste0(main, " [",nms,"]")
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
+    
+    invisible(if(output_highest_level & length(nesting_suggest) ==0) list(Structure_Types = res, data_used = data) else 
+      if(output_highest_level & output_highest_level !=0) list(tibble(`Nesting Suggestion:` = nesting_suggest), Structure_Types = res, data_used = data) else
+        if(length(nesting_suggest)!=0) list(tibble(`Nesting Suggestion:` = nesting_suggest), data_used = data)) 
+    
+    
+  } else {
+    
+    highest_level_name <- trimws(highest_level_name)
+    highest_level_names <- unique(data[[sss]])
+    
+    idx <- highest_level_name %in% highest_level_names 
+    
+    if(!all(idx)) stop(toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
+    
+    list2plot <- lapply(highest_level_name, function(i) filter(data, eval(ss) == i))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
+    
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
+    
+    if(length(nesting_suggest)!=0) tibble(`Nesting Suggestion:` = nesting_suggest)
+    
+  }
+}                   
+                     
+                     
+#=================================================================================================================================================
+                     
 needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'multcomp','emmeans','tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
