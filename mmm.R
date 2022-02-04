@@ -892,7 +892,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   
   if(!inherits(fit,c("rma.mv"))) stop("Model is not 'rma.mv'.", call. = FALSE)
   datziola <- clubSandwich:::getData(fit) %>%
-    mutate(obsss = row_number())
+    mutate(obsss = fit$slab)
   
   
   # Check Hat values (weight-leveraging effects)
@@ -979,7 +979,7 @@ interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL,
   text(if(view == 1) hat[L] else cook[L], st_del_res_z[L], labels = names(L), pos = pos, col = "magenta", cex = cex_text_outlier, xpd = NA)
   points(if(view == 1) hat[L] else cook[L], st_del_res_z[L], cex=cex[L])
   
-  LL <- as.numeric(names(L))
+  LL <- names(L)
   
   removed <- filter(datziola, obsss %in% LL)
   new_data <- filter(datziola, !obsss %in% LL)
