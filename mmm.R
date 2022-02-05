@@ -1752,7 +1752,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     d3 <- data.frame(Rho = fit$rho, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~") 
-                     else paste0(h,"(",shorten_(clnm, cat_shown),")")) 
+                     else paste0(h," (",shorten_(clnm, cat_shown),")")) 
     
     d3 <- setNames(d3, intToUtf8(961))
     
@@ -1782,7 +1782,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     d5 <- data.frame(Phi = fit$phi, 
                      row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~ ")
-                     else paste0(h,"(",shorten_(clnm, cat_shown),") "))
+                     else paste0(h," (",shorten_(clnm, cat_shown),") "))
     
     d5 <- setNames(d5, intToUtf8(966))
     
