@@ -1636,7 +1636,7 @@ results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
                      
 #=================================================================================================================================================
                      
-results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
+results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
                         drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
                         clean_names = TRUE){
@@ -1725,6 +1725,7 @@ results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
                      row.names = paste0(names(cr), ifelse(cr,"(Crossed Ave.)","(Nested Ave.)"))) 
+    
     d1 <- setNames(d1, intToUtf8(963))
   } else { d1 <- NULL}
   
