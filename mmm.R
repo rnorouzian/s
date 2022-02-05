@@ -1874,15 +1874,15 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     
     out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
     
-    names(out) <- c("Hypothesis","Estimate","SE","t-value","Df","p-value","Lower","Upper")
+    names(out) <- c("Hypothesis","Estimate","SE","t","Df","p","Lower","Upper")
     
-    p.values <- as.numeric(out$"p-value")
+    p.values <- as.numeric(out$"p")
     Signif <- symnum(p.values, corr = FALSE, 
                      na = FALSE, cutpoints = 
                        c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                      symbols = c("***", "**", "*", ".", " "))
     
-    out <- add_column(out, Sig. = Signif, .after = "p-value")
+    out <- add_column(out, Sig. = Signif, .after = "p")
     
     out <- roundi(out, digits = digits)
     
@@ -1915,15 +1915,15 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
                                         test=test, tidy=TRUE, ...))[-c(2,4)], digits)
   
-  out <- setNames(out, c("Hypothesis","F-value","Df1","Df2","p-value"))
+  out <- setNames(out, c("Hypothesis","F","Df1","Df2","p"))
   
-  p.values <- as.numeric(out$"p-value")
+  p.values <- as.numeric(out$"p")
   Signif <- symnum(p.values, corr = FALSE, 
                    na = FALSE, cutpoints = 
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
-  out <- add_column(out, Sig. = Signif, .after = "p-value")
+  out <- add_column(out, Sig. = Signif, .after = "p")
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
