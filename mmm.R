@@ -1658,7 +1658,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     a <- coef(summary(fit))
     
-    nm <- c("Estimate","SE","t","Df","p","Lower","Upper")
+    nm <- c("Estimate","SE","t","Df","p-value","Lower","Upper")
     
     nm <- if(fit$test == "t") { nm } else { nm[3] <- "z";
     nm[-4] }
@@ -1673,19 +1673,19 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     a <- a[c(1:3,6,4:5)]
     
-    setNames(a, c("Estimate","SE","Df","p","Lower","Upper"))
+    setNames(a, c("Estimate","SE","Df","p-value","Lower","Upper"))
   }
   
   u <- get_error_rho(fit)
   cte <- length(u) == 1
   
   d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
-                   row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")"))
+                   row.names = paste0("Within Corr. (",if(cte) "constant" else "average",")"))
   
   if(QE){
     qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
                      pval = fit$QEp, row.names = "QE") %>%
-      dplyr::rename("p"="pval") 
+      dplyr::rename("p-value"="pval") 
     
     res <- bind_rows(res, qe)
   }
@@ -1698,14 +1698,14 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     if(sig){ 
       
-      p.values <- as.numeric(out$"p")
+      p.values <- as.numeric(out$"p-value")
       
       Signif <- symnum(p.values, corr = FALSE, 
                        na = FALSE, cutpoints = 
                          c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                        symbols = c("***", "**", "*", ".", " ")) 
       
-      out <- add_column(out, Sig. = Signif, .after = "p")
+      out <- add_column(out, Sig. = Signif, .after = "p-value")
     }
     
     if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
@@ -1724,7 +1724,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
-                     row.names = paste0(names(cr), ifelse(cr,"(Crossed Ave.)","(Nested Ave.)"))) 
+                     row.names = paste0(names(cr), ifelse(cr," (Crossed Ave.)"," (Nested Ave.)"))) 
     
     d1 <- setNames(d1, intToUtf8(963))
   } else { d1 <- NULL}
@@ -1742,8 +1742,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     d2 <- data.frame(Tau = sqrt(fit$tau2), 
                      row.names = paste0(if(!is_simple) clnm else fit$g.names[1],
-                                        paste0(if(is_diag)"(Uncor." 
-                                               else "(Cor.",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1]),")")))
+                                        paste0(if(is_diag)" (Uncor. " 
+                                               else " (Cor. ",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1]),")")))
     
     d2 <- setNames(d2, intToUtf8(964))
     
@@ -1772,8 +1772,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     d4 <- data.frame(Gamma = sqrt(fit$gamma2), 
                      row.names = paste0(if(!is_simple) clnm else fit$h.names[1],
-                                        paste0(if(is_diag)"(Uncor." 
-                                               else "(Cor.",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1]),") "))) 
+                                        paste0(if(is_diag)" (Uncor. " 
+                                               else " (Cor. ",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1]),") "))) 
     
     d4 <- setNames(d4, intToUtf8(933))
     
@@ -1794,14 +1794,14 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   
   if(sig){ 
     
-    p.values <- as.numeric(out$"p")
+    p.values <- as.numeric(out$"p-value")
     
     Signif <- symnum(p.values, corr = FALSE, 
                      na = FALSE, cutpoints = 
                        c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                      symbols = c("***", "**", "*", ".", " ")) 
     
-    out <- add_column(out, Sig. = Signif, .after = "p")
+    out <- add_column(out, Sig. = Signif, .after = "p-value")
   }
   
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
@@ -1874,15 +1874,15 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     
     out <- as.data.frame(pairs(ems, reverse = reverse, each = "simple", infer = infer)$emmeans)[c(1:3,7,4,8,5:6)]
     
-    names(out) <- c("Hypothesis","Estimate","SE","t","Df","p","Lower","Upper")
+    names(out) <- c("Hypothesis","Estimate","SE","t","Df","p-value","Lower","Upper")
     
-    p.values <- as.numeric(out$"p")
+    p.values <- as.numeric(out$"p-value")
     Signif <- symnum(p.values, corr = FALSE, 
                      na = FALSE, cutpoints = 
                        c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                      symbols = c("***", "**", "*", ".", " "))
     
-    out <- add_column(out, Sig. = Signif, .after = "p")
+    out <- add_column(out, Sig. = Signif, .after = "p-value")
     
     out <- roundi(out, digits = digits)
     
@@ -1915,15 +1915,15 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
                                         test=test, tidy=TRUE, ...))[-c(2,4)], digits)
   
-  out <- setNames(out, c("Hypothesis","F","Df1","Df2","p"))
+  out <- setNames(out, c("Hypothesis","F","Df1","Df2","p-value"))
   
-  p.values <- as.numeric(out$"p")
+  p.values <- as.numeric(out$"p-value")
   Signif <- symnum(p.values, corr = FALSE, 
                    na = FALSE, cutpoints = 
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
-  out <- add_column(out, Sig. = Signif, .after = "p")
+  out <- add_column(out, Sig. = Signif, .after = "p-value")
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
