@@ -1468,7 +1468,7 @@ clean_reg_names <- function(fit) {
   
 #=================================================================================================================================================       
        
-results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
+results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
                         drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
                         clean_names = TRUE){
@@ -1633,6 +1633,185 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   
   return(out)
 }
+                     
+#=================================================================================================================================================
+                     
+results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
+                        cat_shown = 1, shift_up = NULL, shift_down = NULL, 
+                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
+                        clean_names = TRUE){
+  
+  if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  fixed_eff <- is.null(fit$random)
+  
+  if(clean_names) fit <- clean_reg_names(fit)
+  
+  cr <- if(!fixed_eff) is_crossed(fit) else FALSE
+  
+  if(robust & any(cr) || robust & fixed_eff) { 
+    
+    robust <- FALSE
+    message("Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
+  }
+  
+  res <- if(!robust) { 
+    
+    a <- coef(summary(fit))
+    
+    nm <- c("Estimate","SE","t","Df","p","Lower","Upper")
+    
+    nm <- if(fit$test == "t") { nm } else { nm[3] <- "z";
+    nm[-4] }
+    
+    setNames(a, nm)
+    
+  } else {
+    
+    a <- as.data.frame(conf_int(fit, vcov = "CR2"))
+    
+    a$p_Satt <- coef_test(fit, vcov = "CR2")$p_Satt
+    
+    a <- a[c(1:3,6,4:5)]
+    
+    setNames(a, c("Estimate","SE","Df","p","Lower","Upper"))
+  }
+  
+  u <- get_error_rho(fit)
+  cte <- length(u) == 1
+  
+  d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
+                   row.names = paste0("Within Corr.(",if(cte) "constant" else "average",")"))
+  
+  if(QE){
+    qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
+                     pval = fit$QEp, row.names = "QE") %>%
+      dplyr::rename("p"="pval") 
+    
+    res <- bind_rows(res, qe)
+  }
+  
+  
+  if(fixed_eff) { 
+    
+    out <- roundi(dplyr::bind_rows(res, d6), digits = digits)
+    out[is.na(out)] <- blank_sign
+    
+    if(sig){ 
+      
+      p.values <- as.numeric(out$"p")
+      
+      Signif <- symnum(p.values, corr = FALSE, 
+                       na = FALSE, cutpoints = 
+                         c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                       symbols = c("***", "**", "*", ".", " ")) 
+      
+      out <- add_column(out, Sig. = Signif, .after = "p")
+    }
+    
+    if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
+    if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
+    if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+    
+    out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+    
+    return(out)
+  }
+  
+  res <- rbind(res, "(RANDOM)" = NA)
+  
+  Sys.setlocale(category = "LC_ALL", locale = "Greek")
+  
+  if(fit$withS){
+    
+    d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
+                     row.names = paste0(names(cr), ifelse(cr,"(Crossed Ave.)","(Nested Ave.)"))) 
+    d1 <- setNames(d1, intToUtf8(963))
+  } else { d1 <- NULL}
+  
+  if(fit$withG){
+    
+    h <- paste(fit$struct[1], "Corr.")
+    is_un <- fit$struct[1] == "UN"
+    is_gen <- fit$struct[1] == "GEN"
+    is_diag <- fit$struct[1] == "DIAG"
+    is_simple <- length(fit$tau2) == 1
+    
+    rnm <- paste("Level:", tail(fit$g.names,1))
+    clnm <- clean_GH_names(fit)
+    
+    d2 <- data.frame(Tau = sqrt(fit$tau2), 
+                     row.names = paste0(if(!is_simple) clnm else fit$g.names[1],
+                                        paste0(if(is_diag)"(Uncor." 
+                                               else "(Cor.",if(!is_simple & !is_gen) paste0(" ", fit$g.names[1]),")")))
+    
+    d2 <- setNames(d2, intToUtf8(964))
+    
+    d2 <- rbind(NA, d2)
+    rownames(d2)[1] <- rnm
+    
+    d3 <- data.frame(Rho = fit$rho, 
+                     row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~") 
+                     else paste0(h,"(",shorten_(clnm, cat_shown),")")) 
+    
+    d3 <- setNames(d3, intToUtf8(961))
+    
+  } else { d2 <- NULL; d3 <- NULL}
+  
+  if(fit$withH){
+    
+    h <- paste(fit$struct[2], "Corr.")
+    is_un <- fit$struct[2] == "UN"
+    is_gen <- fit$struct[2] == "GEN"
+    is_diag <- fit$struct[2] == "DIAG"
+    is_simple <- length(fit$gamma2) == 1
+    
+    rnm <- paste("Level:", paste0(tail(fit$h.names,1)," "))
+    
+    clnm <- clean_GH_names(fit, G=FALSE)
+    
+    d4 <- data.frame(Gamma = sqrt(fit$gamma2), 
+                     row.names = paste0(if(!is_simple) clnm else fit$h.names[1],
+                                        paste0(if(is_diag)"(Uncor." 
+                                               else "(Cor.",if(!is_simple) paste0(" ",if(!is_gen)fit$h.names[1]),") "))) 
+    
+    d4 <- setNames(d4, intToUtf8(933))
+    
+    d4 <- rbind(NA, d4)
+    rownames(d4)[1] <- rnm
+    
+    d5 <- data.frame(Phi = fit$phi, 
+                     row.names = if(is_un || is_gen) apply(combn(clnm,2),2,paste0, collapse = "~ ")
+                     else paste0(h,"(",shorten_(clnm, cat_shown),") "))
+    
+    d5 <- setNames(d5, intToUtf8(966))
+    
+  } else { d4 <- NULL; d5 <- NULL}
+  
+  out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5, d6), digits = digits)
+  
+  out[is.na(out)] <- blank_sign
+  
+  if(sig){ 
+    
+    p.values <- as.numeric(out$"p")
+    
+    Signif <- symnum(p.values, corr = FALSE, 
+                     na = FALSE, cutpoints = 
+                       c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                     symbols = c("***", "**", "*", ".", " ")) 
+    
+    out <- add_column(out, Sig. = Signif, .after = "p")
+  }
+  
+  if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
+  if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
+  if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+  
+  out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+  
+  return(out)
+}                     
+                     
 #=================================================================================================================================================                   
                    
 roundi <- function(x, digits = 7){
