@@ -1832,7 +1832,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", 
                    shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
-                   drop_cols = 7, full = FALSE, ...){
+                   drop_cols = 7, full = FALSE, na.rm = TRUE, ...){
   
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
@@ -1894,6 +1894,8 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     
     out <- dplyr::select(out, -dplyr::all_of(drop_cols))
     
+    if(na.rm) out <- na.omit(out)
+    
     return(out)
   }
   
@@ -1901,7 +1903,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
     
     ems
   }
-}      
+}
   
                      
 #=================================================================================================================================================
