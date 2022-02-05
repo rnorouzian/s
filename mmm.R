@@ -1832,7 +1832,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
                    adjust = "tukey", compare = FALSE, plot = FALSE, 
                    reverse = TRUE, digits = 3, xlab = "Estimated Effect", 
                    shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
-                   drop_cols = NULL, full = FALSE, ...){
+                   drop_cols = 7, full = FALSE, ...){
   
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
