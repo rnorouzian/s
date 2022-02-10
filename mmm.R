@@ -1211,9 +1211,7 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
   
   x <- if(!full) allEffects(fit2, ...) else predictorEffects(fit2, ...)
   
-  ok <- sapply(x, function(i) !all(is.na(i$fit)))
-
-  x <- x[ok]
+  x <- Filter(function(i) !all(is.na(i$fit)), x)
 
   x <- if(!is.null(index)) x[index] else if(int_only) x[grep(":",names(x))] else x
   
