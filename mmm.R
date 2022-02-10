@@ -186,7 +186,7 @@ if(sig) suppressMessages(suppressWarnings(add_sig_funnel(f1, ...)))
      
 #================================================================================================================================   
            
-cat_overlap <- function(data, study_id, ...){
+cat_overlap <- function(data, study_id, ..., blank_sign = "-"){
   
   data <- full_clean(data)
   study_id <- rlang::ensym(study_id)
@@ -223,7 +223,7 @@ cat_overlap <- function(data, study_id, ...){
       dplyr::mutate(dplyr::across(tidyselect::all_of(nm1), as.character))  
  
    out2 <- out1[-1]
-   out2[upper.tri(out2)] <- "-"
+   out2[upper.tri(out2)] <- blank_sign
    dplyr::bind_cols(out1[1],out2)
     
   }), cat_nms)
