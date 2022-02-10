@@ -188,6 +188,7 @@ if(sig) suppressMessages(suppressWarnings(add_sig_funnel(f1, ...)))
            
 cat_overlap <- function(data, study_id, ...){
   
+  data <- full_clean(data)
   study_id <- rlang::ensym(study_id)
   cat_mod <- rlang::ensyms(...)
   cat_nms <- purrr::map_chr(cat_mod, rlang::as_string)
