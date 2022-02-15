@@ -1642,7 +1642,7 @@ results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
                         drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
-                        clean_names = TRUE){
+                        clean_names = TRUE, tidy = FALSE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   fixed_eff <- is.null(fit$random)
@@ -1717,12 +1717,14 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     out <- dplyr::select(out, -dplyr::all_of(drop_cols))
     
+    if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
+    
     return(out)
   }
   
-  res <- rbind(res, "(RANDOM)" = NA)
+  res <- rbind(res, "RANDOM:" = NA)
   
-  Sys.setlocale(category = "LC_ALL", locale = "Greek")
+  Sys.setlocale(locale = "Greek")
   
   if(fit$withS){
     
@@ -1812,6 +1814,8 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
   
   out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+  
+  if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
   
   return(out)
 }                     
