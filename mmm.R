@@ -1641,8 +1641,9 @@ results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
                      
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
-                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, sig = FALSE,
-                        clean_names = TRUE, tidy = FALSE){
+                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, 
+                        QM = FALSE, sig = FALSE, clean_names = TRUE, 
+                        tidy = FALSE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   fixed_eff <- is.null(fit$random)
@@ -1691,6 +1692,15 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
       dplyr::rename("p-value"="pval") 
     
     res <- bind_rows(res, qe)
+  }
+  
+  
+  if(QM){
+    qm <- data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
+                     pval = fit$QMp, row.names = "QM") %>%
+      dplyr::rename("p-value"="pval") 
+    
+    res <- bind_rows(res, qm)
   }
   
   
@@ -1818,7 +1828,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
   
   return(out)
-}                     
+}                
                      
 #=================================================================================================================================================                   
                    
