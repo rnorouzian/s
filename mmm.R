@@ -1927,14 +1927,22 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
                      
 mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
                           shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
-                          clean_names = TRUE, ...){
+                          clean_names = TRUE, cat_shown = 1, ...){
   
   if(clean_names) obj <- clean_reg_names(fit)
   
-  out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
-                                        test=test, tidy=TRUE, ...))[-c(2,4)], digits)
+  ind_coefs <- environment(constraints)$constraints
   
-  out <- setNames(out, c("Hypothesis","F","Df1","Df2","p-value"))
+  out <- roundi(as.data.frame(Wald_test(obj=obj, constraints=constraints, vcov=vcov, 
+                                        test=test, tidy=TRUE, ...)), digits)
+  
+  out <- dplyr::select(out, -c(test, delta))
+  
+  is_pair <- "hypothesis" %in% names(out)
+  
+  nm <- c("Hypothesis","F","Df1","Df2","p-value")
+  
+  out <- setNames(out, if(is_pair) nm else nm[-1])
   
   p.values <- as.numeric(out$"p-value")
   Signif <- symnum(p.values, corr = FALSE, 
@@ -1942,7 +1950,9 @@ mc_robust_rma <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
                    symbols = c("***", "**", "*", ".", " "))
   
+  
   out <- add_column(out, Sig. = Signif, .after = "p-value")
+  out <- set_rownames(out, if(!is_pair) shorten_(names(coef(obj)[ind_coefs]), cat_shown) else NULL)
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
