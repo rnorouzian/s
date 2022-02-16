@@ -1925,7 +1925,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
                      
 #=================================================================================================================================================
                      
-mc_rma_robust1 <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
+mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
                           shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
                           clean_names = TRUE, cat_shown = 1, ...){
   
