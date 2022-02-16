@@ -1925,7 +1925,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
                      
 #=================================================================================================================================================
                      
-mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
+mc_rma_robust1 <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits = 3,
                           shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
                           clean_names = TRUE, cat_shown = 1, ...){
   
@@ -1940,9 +1940,11 @@ mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   
   is_pair <- "hypothesis" %in% names(out)
   
-  nm <- c("Hypothesis","F","Df1","Df2","p-value")
+  if(!is_pair) out <- cbind(shorten_(names(coef(obj)[ind_coefs]), cat_shown), out)
   
-  out <- setNames(out, if(is_pair) nm else nm[-1])
+  nm <- c(if(is_pair) "Hypothesis" else "Term","F","Df1","Df2","p-value")
+  
+  out <- setNames(out, nm)
   
   p.values <- as.numeric(out$"p-value")
   Signif <- symnum(p.values, corr = FALSE, 
@@ -1952,7 +1954,6 @@ mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   
   
   out <- add_column(out, Sig. = Signif, .after = "p-value")
-  out <- set_rownames(out, if(!is_pair) shorten_(names(coef(obj)[ind_coefs]), cat_shown) else NULL)
   if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
