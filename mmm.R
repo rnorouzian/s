@@ -1199,7 +1199,7 @@ plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
   
   if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
   
-  lm_fit <- lm(fixed_form_rma(fit), data = eval(fit$call$data), na.action = "na.omit")
+  lm_fit <- lm(fixed_form_rma(fit), data = clubSandwich:::getData(fit), na.action = "na.omit")
   
   is_singular <- anyNA(coef(lm_fit))
   
@@ -1369,7 +1369,7 @@ pairwise_rma <- function(fit, type = "Tukey", adjust = "none"){
   
 rma2gls <- function(fit){
   
-  data_. <- eval(fit$call$data)
+  data_. <- clubSandwich:::getData(fit)
   form_. <- fixed_form_rma(fit)
   
   fit2 <- nlme::gls(form_., data = data_., method = fit$method, na.action = "na.omit",
@@ -1855,7 +1855,7 @@ mc_rma <- function(fit, specs, var = NULL, by = NULL, horiz = TRUE,
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   if(length(inter_index(fit))==0) full <- TRUE
   
-  dat_ <- eval(fit$call$data)
+  dat_ <- clubSandwich:::getData(fit)
   lm_fit <- lm(fixed_form_rma(fit), data = dat_, na.action = "na.omit")
   lm_fit$call$data <- dat_
   
