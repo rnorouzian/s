@@ -1641,8 +1641,8 @@ results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
                      
 results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
-                        drop_rows = NULL, drop_cols = NULL, QE = FALSE, 
-                        QM = TRUE, sig = FALSE, clean_names = TRUE, 
+                        drop_rows = NULL, drop_cols = NULL, QM = FALSE, 
+                        QE = FALSE, sig = FALSE, clean_names = TRUE, 
                         tidy = FALSE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
