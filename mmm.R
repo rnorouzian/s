@@ -107,7 +107,7 @@ out <- data %>%
     separate({{contrast_col}}, into = c('pre', 'post'), sep = "\\s+-\\s+", remove = FALSE) %>%
     mutate(across(pre:post, ~ map(str_extract_all(., "[A-Za-z0-9-]+\\s*\\d*"), trimws))) %>% 
     filter(lengths(map2(pre, post, intersect)) > 0) %>%
-    select(-pre, -post)
+    dplyr::select(-pre, -post)
 
 as.data.frame(out)
 }     
