@@ -1929,6 +1929,7 @@ mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
                           shift_up = NULL, shift_down = NULL, drop_rows = NULL, 
                           clean_names = TRUE, cat_shown = 1, ...){
   
+  if(!inherits(fit, "rma")) stop("Model is not 'rma.mv()'.", call. = FALSE)
   if(clean_names) obj <- clean_reg_names(fit)
   
   ind_coefs <- environment(constraints)$constraints
@@ -1940,7 +1941,7 @@ mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   
   is_pair <- "hypothesis" %in% names(out)
   
-  if(!is_pair) out <- cbind(shorten_(names(coef(obj)[ind_coefs]), cat_shown), out)
+  if(!is_pair) out <- cbind(shorten_(names(coef.rma(obj)[ind_coefs]), cat_shown), out)
   
   nm <- c(if(is_pair) "Hypothesis" else "Term","F","Df1","Df2","p-value")
   
