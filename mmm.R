@@ -2148,7 +2148,7 @@ sim_rma.mv.dat <- function(..., seed = NULL, mean_sigma = 0.75, sd_df = 1,
   
   dat %>%
     sample_order(names(dots), cat_var_to_remove) %>%
-  select(-tidyselect::all_of(drop_levels)) %>%
+  dplyr::select(-tidyselect::all_of(drop_levels)) %>%
     mutate(row_id = row_number())
     
 }
