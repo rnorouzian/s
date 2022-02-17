@@ -1378,7 +1378,7 @@ rma2gls <- function(fit){
   fit2$call$model <- form_.
   fit2$call$data <- data_.
   
-  fit2$coefficients <- coef(fit) #unlist(data.frame(t(fit$b))) 
+  fit2$coefficients <- coef.rma(fit) #unlist(data.frame(t(fit$b))) 
   fit2$varBeta <- fit$vb
   
   return(fit2)
