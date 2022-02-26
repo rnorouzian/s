@@ -1866,12 +1866,13 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   } else {
     
     a <- as.data.frame(conf_int(fit, vcov = "CR2"))
+    b <- coef_test(fit, vcov = "CR2")
+    a$p_Satt <- b$p_Satt
+         a$t <- b$tstat
     
-    a$p_Satt <- coef_test(fit, vcov = "CR2")$p_Satt
+    a <- a[c(1:2,7,3,6,4:5)]
     
-    a <- a[c(1:3,6,4:5)]
-    
-    setNames(a, c("Estimate","SE","Df","p-value","Lower","Upper"))
+    setNames(a, c("Estimate","SE","t","Df","p-value","Lower","Upper"))
   }
   
   u <- get_error_rho(fit)
