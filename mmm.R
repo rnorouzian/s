@@ -1833,9 +1833,9 @@ results_rma3 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
                      
 #=================================================================================================================================================                                   
                      
-results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
+results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
-                        drop_rows = NULL, drop_cols = NULL, QM = FALSE, 
+                        drop_rows = NULL, drop_cols = NULL, QM = TRUE, 
                         QE = FALSE, sig = FALSE, clean_names = TRUE, 
                         tidy = FALSE){
   
