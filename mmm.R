@@ -1867,7 +1867,7 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
     
     a <- as.data.frame(conf_int(fit, vcov = "CR2"))
     b <- coef_test(fit, vcov = "CR2")
-    a$p_Satt <- b$p_Satt
+         a$p <- b$p_Satt
          a$t <- b$tstat
     
     a <- a[c(1:2,7,3,6,4:5)]
