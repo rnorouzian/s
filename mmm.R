@@ -1890,13 +1890,23 @@ results_rma <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
   }
   
   
-  if(QM){
-    qm <- data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
-                     pval = fit$QMp, row.names = "QM") %>%
-      dplyr::rename("p-value"="pval") 
-    
-    res <- bind_rows(res, qm)
-  }
+if(QM){
+  
+qm <- if(robust) {
+  
+  mc <- clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2")
+  
+  data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
+             pval = mc$p_val, row.names = "QM") %>%
+    dplyr::rename("p-value"="pval") 
+  
+} else {
+   data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
+                   pval = fit$QMp, row.names = "QM") %>%
+    dplyr::rename("p-value"="pval") 
+}
+  res <- bind_rows(res, qm)
+}
   
   
   blk <- paste0(paste0(rep(" ",digits-1), collapse=""), "NA", collapse ="")
