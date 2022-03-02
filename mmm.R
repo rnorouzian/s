@@ -1925,6 +1925,7 @@ qm <- if(robust) {
     if(sig){ 
       
       p.values <- as.numeric(out$"p-value")
+      p.values <- p.values[!is.na(p.values)]
       
       Signif <- symnum(p.values, corr = FALSE, 
                        na = FALSE, cutpoints = 
@@ -2023,6 +2024,7 @@ qm <- if(robust) {
   if(sig){ 
     
     p.values <- as.numeric(out$"p-value")
+    p.values <- p.values[!is.na(p.values)]
     
     Signif <- symnum(p.values, corr = FALSE, 
                      na = FALSE, cutpoints = 
