@@ -2243,30 +2243,34 @@ set_rownames <- function (object = nm, nm)
                      
 #=================================================================================================================================================
           
-smooth_vi <- function(data, study, vi, digits = 6, fun = sd, plot = TRUE, ylab = "Studies", xlab = NULL){
-  
-  dot_cols <- rlang::ensyms(study, vi, fun)
-  str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
-  
-  d_clean <- full_clean(data)
-  
-out <- map_dfr(group_split(d_clean, study), 
-          ~data.frame(study = unique(.[[str_cols[[1]]]]), sd = round(fun(.[[str_cols[[2]]]]),digits)))
+smooth_vi <- function(data, study, vi, digits = 6, fun = sd, plot = TRUE, ylab = "Studies", xlab = NULL, max_bar = FALSE){
+   
+   dot_cols <- rlang::ensyms(study, vi, fun)
+   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
+   
+   d_clean <- full_clean(data)
+   
+   out <- map_dfr(group_split(d_clean, study), 
+                  ~data.frame(study = unique(.[[str_cols[[1]]]]), sd = round(fun(.[[str_cols[[2]]]]),digits)))
+   
+   names(out)[2] <- str_cols[[3]]
+   
+   res <- hist(out[[2]], plot = FALSE)
+   graphics.off()
+     hist(out[[2]], yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) toupper(str_cols[[3]]) else xlab,
+          main = "Closeness of Sampling Variances\n (in each study)", cex.lab = .9, ylab = ylab, cex.main = .8)
+     axis(2, at = c(axTicks(2), max(res$counts)), las=1, cex.axis=.8, mgp=c(1.5,.55,0))
+     text(res$mids[res$counts!=0], res$counts[res$counts!=0], res$counts[res$counts!=0], pos = 3, col = 4, font = 2, xpd = NA, cex = .75)
 
-names(out)[2] <- str_cols[[3]]
-
-if(plot){
-  
-  res <- hist(out[[2]], plot = FALSE)
-  
-  hist(out[[2]], yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) toupper(str_cols[[3]]) else xlab,
-       main = "Closeness of Sampling Variances\n (in each study)", cex.lab = .9, ylab = ylab, cex.main = .8)
-  axis(2, at = c(axTicks(2), max(res$counts)), las=1, cex.axis=.8, mgp=c(1.5,.55,0))
-  text(res$mids[res$counts!=0], res$counts[res$counts!=0], res$counts[res$counts!=0], pos = 3, col = 4, font = 2, xpd = NA, cex = .75)
+   
+     whichbar <- findInterval(out[[2]], res$breaks)
+     mm <- sort(unique(whichbar[!is.na(whichbar)]))
+     
+     out <- if(!max_bar) setNames(lapply(mm, function(i) na.omit(out[whichbar==i,])), 
+              paste0("Bar",seq_along(mm))) else na.omit(out[whichbar==which.max(res$counts),])
+    
+    return(invisible(out))
 }
-
-return(out)
-}          
           
 #=================================================================================================================================================
 #=================================================================================================================================================
