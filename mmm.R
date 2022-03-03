@@ -2243,7 +2243,7 @@ set_rownames <- function (object = nm, nm)
                      
 #=================================================================================================================================================
           
-smooth_vi <- function(data, study, vi, digits = 3, fun = sd, plot = FALSE, ylab = "Studies", xlab = NULL){
+smooth_vi <- function(data, study, vi, digits = 6, fun = sd, plot = FALSE, ylab = "Studies", xlab = NULL){
   
   dot_cols <- rlang::ensyms(study, vi, fun)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
