@@ -2243,7 +2243,7 @@ set_rownames <- function (object = nm, nm)
                      
 #=================================================================================================================================================
           
-smooth_vi <- function(data, study, vi, digits = 6, fun = sd, plot = FALSE, ylab = "Studies", xlab = NULL){
+smooth_vi <- function(data, study, vi, digits = 6, fun = sd, plot = TRUE, ylab = "Studies", xlab = NULL){
   
   dot_cols <- rlang::ensyms(study, vi, fun)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
@@ -2262,7 +2262,7 @@ if(plot){
   hist(out[[2]], yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) str_cols[[3]] else xlab,
        main = "Closeness of Sampling Variances\n (in each study)", cex.lab = .9, ylab = ylab, cex.main = .8)
   axis(2, at = c(axTicks(2), max(res$counts)), las=1, cex.axis=.8, mgp=c(1.5,.55,0))
-  text(res$mids[res$counts!=0], res$counts[res$counts!=0], res$counts[res$counts!=0],pos = 3, col = 4, font = 2, xpd = NA, cex = .75)
+  text(res$mids[res$counts!=0], res$counts[res$counts!=0], res$counts[res$counts!=0], pos = 3, col = 4, font = 2, xpd = NA, cex = .75)
 }
 
 return(out)
