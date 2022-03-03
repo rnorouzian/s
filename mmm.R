@@ -2259,7 +2259,7 @@ if(plot){
   
   res <- hist(out[[2]], plot = FALSE)
   
-  hist(out[[2]], yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) str_cols[[3]] else xlab,
+  hist(out[[2]], yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) toupper(str_cols[[3]]) else xlab,
        main = "Closeness of Sampling Variances\n (in each study)", cex.lab = .9, ylab = ylab, cex.main = .8)
   axis(2, at = c(axTicks(2), max(res$counts)), las=1, cex.axis=.8, mgp=c(1.5,.55,0))
   text(res$mids[res$counts!=0], res$counts[res$counts!=0], res$counts[res$counts!=0], pos = 3, col = 4, font = 2, xpd = NA, cex = .75)
