@@ -392,10 +392,11 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
                         
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL, rowcount = TRUE, main_extra_name = FALSE) 
+                      toplab = NULL, cex = 1, main = NULL, rowcount = TRUE, main_extra_name = FALSE,
+                      abb_names = FALSE, abb_length = 10L) 
 {
   
-  data <- rm.colrowNA(trim_(data)) %>%
+  data <- full_clean(data) %>%
     mutate(row_id = row_number())
   
   dot_cols <- rlang::ensyms(...)
@@ -406,6 +407,8 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   
   ss <- substitute(highest_level)
   sss <- deparse(ss)
+  
+  if(abb_names) data[[sss]] <- base::abbreviate(data[[sss]], abb_length, named = FALSE)
   
   if(reset){
     graphics.off()
@@ -420,18 +423,15 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     struc <- match.arg(structure) 
     
-
     hlist <- data %>%
       dplyr::group_by({{highest_level}}) %>%
       dplyr::mutate(grp = dplyr::across(tidyselect::all_of(str_cols), ~ {
         tmp <- dplyr::n_distinct(.)
-        #dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, TRUE ~ 3)
-         dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp > 1 & tmp < n() ~ 3,  TRUE ~ 4)
+        dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp > 1 & tmp < n() ~ 3,  TRUE ~ 4)
       }) %>%
         purrr::reduce(stringr::str_c, collapse = "")) %>%
       dplyr::ungroup(.) %>%
       dplyr::group_split(grp, .keep = FALSE)
-
     
     res <- Filter(NROW, rev(hlist))
     
@@ -480,7 +480,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
   }
-}                   
+}                  
                         
 #=====================================================================================================================================================
                         
