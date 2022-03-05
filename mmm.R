@@ -408,7 +408,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   ss <- substitute(highest_level)
   sss <- deparse(ss)
   
-  if(abb_names) data[[sss]] <- base::abbreviate(data[[sss]], abb_length, named = FALSE)
+  if(abb_names & is.null(highest_level_name)) data[[sss]] <- base::abbreviate(data[[sss]], abb_length, named = FALSE)
   
   if(reset){
     graphics.off()
