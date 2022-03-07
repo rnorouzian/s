@@ -2175,6 +2175,7 @@ mc_rma_robust <- function(fit, constraints, vcov = "CR2", test = "HTZ", digits =
   out <- setNames(out, nm)
   
   p.values <- as.numeric(out$"p-value")
+  p.values <- p.values[!is.na(p.values)]        
   Signif <- symnum(p.values, corr = FALSE, 
                    na = FALSE, cutpoints = 
                      c(0, 0.001, 0.01, 0.05, 0.1, 1), 
