@@ -2245,7 +2245,7 @@ set_rownames <- function (object = nm, nm)
 #=================================================================================================================================================
           
 smooth_vi <- function(data, study, vi, digits = 8, fun = sd, ylab = "Studies", xlab = NULL, max_bar = FALSE, return_list = TRUE,
-                      breaks = "Sturges"){
+                      breaks = "Sturges", main = "Closeness of Sampling Variances\n (in each study)"){
   
   dot_cols <- rlang::ensyms(study, vi, fun)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
@@ -2261,7 +2261,7 @@ smooth_vi <- function(data, study, vi, digits = 8, fun = sd, ylab = "Studies", x
   graphics.off()
   
   hist(out[[2]], breaks = breaks, xaxt = "n", yaxt = "n", cex.axis = .8, mgp = c(1.5,.4,0), xlab = if(is.null(xlab)) toupper(str_cols[[3]]) else xlab,
-       main = "Closeness of Sampling Variances\n (in each study)", cex.lab = .9, ylab = ylab, cex.main = .8)
+       main = main, cex.lab = .9, ylab = ylab, cex.main = .8)
   
   axis(1, at = res$breaks, las=1, cex.axis=.8, mgp=c(1.5,.4,0))
   axis(2, at = c(axTicks(2), max(res$counts)), las=1, cex.axis=.8, mgp=c(1.5,.55,0))
