@@ -72,7 +72,7 @@ is_V <- any(odiag(fit$V) != 0)
 
 if(is_V) {
   
-  u <- unique(odiag(round(cov2cor(fit$V), 4)))
+  u <- unique(odiag(round(cov2cor(fit$V), 6)))
   u[u!=0]
   
 } else 0
@@ -1871,21 +1871,15 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     
   } else {
     
-    a <- as.data.frame(conf_int(fit, vcov = "CR2"))
+    a <- as.data.frame(conf_int(fit, vcov = "CR2"))[-1]
     b <- coef_test(fit, vcov = "CR2")
-         a$p <- b$p_Satt
-         a$t <- b$tstat
+    a$p <- b$p_Satt
+    a$t <- b$tstat
     
     a <- a[c(1:2,7,3,6,4:5)]
     
     setNames(a, c("Estimate","SE","t","Df","p-value","Lower","Upper"))
   }
-  
-  u <- get_error_rho(fit)
-  cte <- length(u) == 1
-  
-  d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
-                   row.names = paste0("Within Corr. (",if(cte) "constant" else "average",")"))
   
   if(QE){
     qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
@@ -1896,24 +1890,31 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   }
   
   
-if(QM){
+  if(QM){
+    
+    qm <- if(robust) {
+      
+      mc <- clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2")
+      
+      if(is.na(mc$p_val)) message("Robust QM p-value undefined (likely due to high # of coefficients vs.\n# of highest clusters e.g., studies).")
+      
+      data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
+                 pval = mc$p_val, row.names = "QM") %>%
+        dplyr::rename("p-value"="pval") 
+      
+    } else {
+      data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
+                 pval = fit$QMp, row.names = "QM") %>%
+        dplyr::rename("p-value"="pval") 
+    }
+    res <- bind_rows(res, qm)
+  }
   
-qm <- if(robust) {
+  u <- get_error_rho(fit)
+  cte <- length(u) == 1
   
-  mc <- clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2")
-  
-  data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
-             pval = mc$p_val, row.names = "QM") %>%
-    dplyr::rename("p-value"="pval") 
-  
-} else {
-   data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
-                   pval = fit$QMp, row.names = "QM") %>%
-    dplyr::rename("p-value"="pval") 
-}
-  res <- bind_rows(res, qm)
-}
-  
+  d6 <- data.frame(r = if(cte) u else mean(u, na.rm = TRUE), 
+                   row.names = paste0("Within Corr. (",if(cte) "constant" else "average",")"))
   
   blk <- paste0(paste0(rep(" ",digits-1), collapse=""), "NA", collapse ="")
   
@@ -1925,7 +1926,6 @@ qm <- if(robust) {
     if(sig){ 
       
       p.values <- as.numeric(out$"p-value")
-      p.values <- p.values[!is.na(p.values)]
       
       Signif <- symnum(p.values, corr = FALSE, 
                        na = FALSE, cutpoints = 
@@ -1953,7 +1953,7 @@ qm <- if(robust) {
   if(fit$withS){
     
     d1 <- data.frame(Sigma = sqrt(fit$sigma2), 
-                     row.names = paste0(names(cr), ifelse(cr," (Crossed Ave.)"," (Nested Ave.)"))) 
+                     row.names = paste0(names(cr), ifelse(cr," (crossed)"," (nested)"))) 
     
     d1 <- setNames(d1, intToUtf8(963))
   } else { d1 <- NULL}
@@ -2019,12 +2019,12 @@ qm <- if(robust) {
   
   out <- roundi(dplyr::bind_rows(res, d1, d2, d3, d4, d5, d6), digits = digits)
   
+  
   out[out== blk] <- blank_sign
   
   if(sig){ 
     
     p.values <- as.numeric(out$"p-value")
-    p.values <- p.values[!is.na(p.values)]
     
     Signif <- symnum(p.values, corr = FALSE, 
                      na = FALSE, cutpoints = 
