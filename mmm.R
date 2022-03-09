@@ -101,10 +101,10 @@ inter_index <- function(fit){
      
 bet_with <- function(data, contrast_col = Hypothesis) 
   {
-  
+  #sep = "\\s+-\\s+"
 out <- data %>%
     as_tibble %>%
-    separate({{contrast_col}}, into = c('pre', 'post'), sep = "\\s+-\\s+", remove = FALSE) %>%
+    separate({{contrast_col}}, into = c('pre', 'post'), sep = "\\s+[-/]\\s+", remove = FALSE) %>%
     mutate(across(pre:post, ~ map(str_extract_all(., "[A-Za-z0-9-]+\\s*\\d*"), trimws))) %>% 
     filter(lengths(map2(pre, post, intersect)) > 0) %>%
     dplyr::select(-pre, -post)
