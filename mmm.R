@@ -2068,8 +2068,9 @@ roundi2 <- function(x, digits = 7){
                      
 roundi <- function(x, digits = 7){
   
-  if(!inherits(x, c("data.frame","tibble"))) stop("'x' must be a 'data.frame'.", call. = FALSE)
-  
+  if(!inherits(x, c("data.frame","tibble","matrix"))) stop("'x' must be a 'data.frame' or a 'matrix'.", call. = FALSE)
+  if(inherits(x,"matrix")) x <- as.data.frame(x)
+     
   num <- sapply(x, is.numeric)
   
   x[num] <- lapply(x[num], function(i) formatC(round(i, digits), digits, format = "f"))
