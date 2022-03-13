@@ -1906,8 +1906,6 @@ if(inherits(mc, "try-error")) {
   message("Robust QM undefined (likely due to missing data).\nQM results are model-based.")
 }
     qm <- if(robust) {
-     
-      #mc <- clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2")
       
       if(is.na(mc$p_val)) message("Robust QM p-value undefined (likely due to high # of coefficients vs.\n# of highest clusters e.g., studies).")
       
