@@ -18,7 +18,14 @@ change_case <- function(X, except = NULL, fun = tolower){
               
 #===============================================================================================================================
 
-
+abber_case <- function(X, abb_except = NULL, abb_length = 10){
+  y <- names(Filter(function(i) is.character(i) | is.factor(i), X[setdiff(names(X), abb_except)]))
+  X[y] <- lapply(X[y], abbreviate, minlength=abb_length, named=FALSE)
+  return(X)
+}                    
+                    
+#===============================================================================================================================
+                    
 rm.allrowNA <- function(X) { 
   
 X[rowSums(is.na(X) | X == "") != ncol(X), , drop = FALSE]  
@@ -393,7 +400,7 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), output_highest_level = FALSE,
                       toplab = NULL, cex = 1, main = NULL, rowcount = TRUE, main_extra_name = FALSE,
-                      abb_names = FALSE, abb_length = 10L) 
+                      abb_names = FALSE, abb_length = 12, abb_except = NULL) 
 {
   
   data <- full_clean(data) %>%
@@ -408,7 +415,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   ss <- substitute(highest_level)
   sss <- deparse(ss)
   
-  if(abb_names & is.null(highest_level_name)) data[[sss]] <- base::abbreviate(data[[sss]], abb_length, named = FALSE)
+  if(abb_names & is.null(highest_level_name)) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except)
   
   if(reset){
     graphics.off()
