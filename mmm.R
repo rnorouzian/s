@@ -1903,7 +1903,7 @@ mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent =
     
 if(inherits(mc, "try-error")) { 
   robust <- FALSE
-  message("Robust QM undefined (likely due to missing data).\nQM results are model-based.")
+  message("Robust QM unavailable (likely having <2 clusters for some moderators).\nQM results are model-based.")
 }
     qm <- if(robust) {
       
