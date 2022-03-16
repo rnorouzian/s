@@ -1950,7 +1950,7 @@ if(inherits(mc, "try-error")) {
     if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
     if(!is.null(drop_rows)) out <- out[-drop_rows, ]
     
-    out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+    out <- dplyr::select(out, -tidyselect::all_of(drop_cols))
     
     if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
     
@@ -2049,7 +2049,7 @@ if(inherits(mc, "try-error")) {
   if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
   if(!is.null(drop_rows)) out <- out[-drop_rows, ]
   
-  out <- dplyr::select(out, -dplyr::all_of(drop_cols))
+  out <- dplyr::select(out, -tidyselect::all_of(drop_cols))
   
   if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
   
