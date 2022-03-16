@@ -1916,7 +1916,7 @@ mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent =
     
 if(inherits(mc, "try-error") || is.na(mc$p_val)) { 
   robust <- FALSE
-  message("Robust QM unavailable, likely having: \n1- some moderators in <2 clusters OR/AND \n2- high # of coefficients vs. # of highest clusters.\nQM results are model-based.")
+  message("Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.")
 }
     qm <- if(robust) {
             
