@@ -1207,7 +1207,7 @@ environment(plot.efflist) <- asNamespace("effects")
   
 #======================================================================================================================================================  
   
-plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
+plot_rma <- plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FALSE,
                             confint = list(style="auto"), x.var, 
                             key.args= list(space="top",cex=.7,cex.title=.8), main=NA,
                             index=NULL, xlab, ylab, z.var, colors, cex, lty, 
@@ -1914,14 +1914,12 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
  
 mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
     
-if(inherits(mc, "try-error")) { 
+if(inherits(mc, "try-error") || is.na(mc$p_val)) { 
   robust <- FALSE
-  message("Robust QM unavailable (likely having <2 clusters for some moderators).\nQM results are model-based.")
+  message("Robust QM unavailable, likely having: \n1- some moderators in <2 clusters OR/AND \n2- high # of coefficients vs. # of highest clusters.\nQM results are model-based.")
 }
     qm <- if(robust) {
-      
-      if(is.na(mc$p_val)) message("Robust QM p-value undefined (likely due to high # of coefficients vs.\n# of highest clusters e.g., studies).")
-      
+            
       data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
                  pval = mc$p_val, row.names = "QM") %>%
         dplyr::rename("p-value"="pval") 
