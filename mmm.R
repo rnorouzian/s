@@ -60,6 +60,19 @@ full_clean <- function(data) rm.colrowNA(trim_(data))
                     
 odiag <- function(x) suppressMessages(x[col(x) != row(x)])
 
+#===============================================================================================================================
+
+lo_ave_up <- function(data = NULL, vars, vals = NULL, digits = 1){
+  
+  if(is.null(vals)){
+    sapply(vars, function(x) 
+      round(setNames(mean(data[[x]]) + c(-1, 0, 1)*sd(data[[x]]), 
+                     paste0(x, c('-1SD', '.Mean', '+1SD'))), digits), simplify = FALSE) 
+  } else {
+    
+    setNames(lapply(vars, function(i) vals), vars)
+  }
+}                    
                     
 #===============================================================================================================================
                     
