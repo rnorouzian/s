@@ -2301,6 +2301,141 @@ smooth_vi <- function(data, study, vi, digits = 8, fun = sd, ylab = "Studies", x
 }
           
 #=================================================================================================================================================
+  
+post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE, ci = TRUE, 
+                     adjust = "none", mutos = FALSE, compare = FALSE, plot = FALSE, p_value = TRUE,
+                     reverse = FALSE, digits = 3, xlab = "Estimated Effect", cat_only = FALSE,
+                     shift_up = NULL, shift_down = NULL, drop_rows = NULL, mutos_name = "(M)UTOS Term",
+                     drop_cols = NULL, full = FALSE, na.rm = TRUE, robust = TRUE, cluster, show0df = FALSE,
+                     sig = FALSE, ...){
+  
+  
+  if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
+  
+  if(robust) { 
+    
+    fixed_eff <- is.null(fit$random)
+    cr <- if(!fixed_eff) is_crossed(fit) else FALSE
+    
+    if(any(cr) || fixed_eff) { 
+      
+      robust <- FALSE
+      message("Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
+    }
+    
+    vcov_. <- try(as.matrix(vcovCR(fit, type = "CR2", cluster = cluster)), silent = TRUE)
+    
+    if(inherits(vcov_., "try-error")) { 
+      robust <- FALSE
+      message("Robust tests unavailable (likely having <2 clusters for some moderators).\nResults are model-based.")
+    }
+  }
+  
+  dat_ <- clubSandwich:::getData(fit)
+  lm_fit <- lm(fixed_form_rma(fit), data = dat_, na.action = "na.omit")
+  lm_fit$call$data <- dat_
+  
+  is_singular <- anyNA(coef(lm_fit))
+  
+  fit <- rma2gls(fit)
+  
+  specs_org <- specs
+  if(is.null(specs)) specs <- as.formula(bquote(~.(terms(fit)[[3]])))
+  
+  if(robust) fit$varBeta <- vcov_.
+  
+  if(is_singular) { 
+    
+    lm_coef <- lm_fit$coefficients
+    gls_coef <- fit$coefficients
+    
+    fit$coefficients <- replace(lm_coef, !is.na(lm_coef), gls_coef)
+    
+    fit <- suppressMessages(emmeans::ref_grid(fit))
+    fit@nbasis <- suppressMessages(emmeans::ref_grid(lm_fit)@nbasis)
+  }
+  
+  infer <- c(ci, p_value)
+  
+  lookup <- c(Contrast="contrast",Estimate="estimate","Mean"="emmean",t="t.ratio",
+              Df="df","p-value"="p.value",Lower="lower.CL",Upper="upper.CL",
+              Df1="df1", Df2="df2","F"="F.ratio","m"="model term")
+  
+  names(lookup)[12] <- mutos_name
+  
+  ems <- try(if(is.null(cont_var)){
+    
+    emmeans(object = fit, specs = specs, infer = infer, adjust = adjust, ...)
+    
+  } else {
+    
+    emtrends(object = fit, specs = specs, var = cont_var, infer = infer, adjust = adjust, ...)
+    
+  }, silent = TRUE)
+  
+  if(inherits(ems, "try-error")) return(message("Error: Wrong specification OR no relavant data for the comparisons found."))
+  
+  is_pair <- "pairwise" %in% as.character(specs)
+  
+  if(!is.null(cont_var) & is_pair) names(lookup)[2] <- paste0(cont_var,".dif")
+  
+ out <- if(is_pair){
+    
+  if(plot) print(plot(ems, by = by, comparisons = compare, horizontal = horiz, adjust = adjust, xlab = xlab)) 
+    
+  as.data.frame(pairs(ems, reverse=reverse, each="simple",infer=infer)[[if(!full) 1 else 2]])
+  
+  }
+  
+  else {
+    
+    if(mutos) {
+      
+      fit_used <- if(!cat_only & is.null(specs_org)) fit else ems
+      
+      as.data.frame(joint_tests(fit_used, by = by, adjust = adjust, show0df = show0df, ...))
+      
+    } else {  
+      
+      as.data.frame(ems)
+      
+    }
+  }
+ 
+ out <- set_rownames(out,NULL)
+ 
+ out <- out %>%
+   dplyr::rename(tidyselect::any_of(lookup))
+ 
+ p.values <- as.numeric(out$"p-value")
+ 
+ if(all(is.na(p.values))) { 
+  return(message("Error: No relavant data for the comparisons found."))
+ }
+ 
+ if(sig){
+ Signif <- symnum(p.values, corr = FALSE, 
+                  na = FALSE, cutpoints = 
+                    c(0, 0.001, 0.01, 0.05, 0.1, 1), 
+                  symbols = c("***", "**", "*", ".", " "))
+ 
+ out <- tibble::add_column(out, Sig. = Signif, .after = "p-value")
+ }
+ 
+ if(na.rm) out <- na.omit(out)
+ 
+ out <- roundi(out, digits = digits)
+ 
+ if(!is.null(shift_up)) out <- shift_rows(out, shift_up)
+ if(!is.null(shift_down)) out <- shift_rows(out, shift_down, up = FALSE)
+ if(!is.null(drop_rows)) out <- out[-drop_rows, ]
+ 
+ out <- dplyr::select(out, -tidyselect::all_of(drop_cols))
+ 
+ return(out)
+}                   
+                   
+#=================================================================================================================================================                   
 #=================================================================================================================================================
                      
 round_effects <- function(data, digits, yi_vi_names = c("yi","vi")){
