@@ -1875,7 +1875,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   if(robust & any(cr) || robust & fixed_eff) { 
     
     robust <- FALSE
-    message("Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
+    message("Note: Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
   }
   
   res <- if(!robust) { 
@@ -1892,6 +1892,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   } else {
     
     a <- as.data.frame(conf_int(fit, vcov = "CR2"))[-1]
+    
     b <- coef_test(fit, vcov = "CR2")
     a$p <- b$p_Satt
     a$t <- b$tstat
@@ -1900,6 +1901,11 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     
     setNames(a, c("Estimate","SE","t","Df","p-value","Lower","Upper"))
   }
+  
+  res_org <- res
+  res <- na.omit(res)
+
+  if(nrow(res) != nrow(res_org)) message("Note: ",dQuote(toString(setdiff(rownames(res_org), rownames(res)))), " dropped due to inestimable result.\n")
   
   if(QE){
     qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
@@ -1911,15 +1917,15 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   
   
   if(QM){
- 
-mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
     
-if(inherits(mc, "try-error") || is.na(mc$p_val)) { 
-  robust <- FALSE
-  message("Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.")
-}
+    mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
+    
+    if(inherits(mc, "try-error") || is.na(mc$p_val)) { 
+      robust <- FALSE
+      message("Note: Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.")
+    }
     qm <- if(robust) {
-            
+      
       data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
                  pval = mc$p_val, row.names = "QM") %>%
         dplyr::rename("p-value"="pval") 
@@ -2067,6 +2073,7 @@ if(inherits(mc, "try-error") || is.na(mc$p_val)) {
   return(out)
   if(sig) cat("Signif. 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")                   
 }                      
+
 #=================================================================================================================================================                   
                    
 roundi2 <- function(x, digits = 7){
