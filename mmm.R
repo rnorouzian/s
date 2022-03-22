@@ -1905,7 +1905,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   res_org <- res
   res <- na.omit(res)
 
-  if(nrow(res) != nrow(res_org)) message("Note: ",dQuote(toString(setdiff(rownames(res_org), rownames(res)))), " dropped due to inestimable result.\n")
+  if(nrow(res) != nrow(res_org)) message("Note: ",dQuote(toString(setdiff(rownames(res_org), rownames(res)))), " dropped due to inestimablity.\n")
   
   if(QE){
     qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
