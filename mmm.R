@@ -1906,7 +1906,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   if(robust & any(cr) || robust & fixed_eff) { 
     
     robust <- FALSE
-    message("Note: Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.")
+    message("Note: Robust estimation not available for models with", if(any(cr))" crossed random-" else " only fixed-", "effects.\n")
   }
   
   res <- if(!robust) { 
@@ -1957,7 +1957,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     
     if(robust & bad || robust && !bad && is.na(mc$p_val)) { 
       robust <- FALSE
-      message("Note: Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.")
+      message("Note: Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.\n")
     }
     
     qm <- if(robust) {
