@@ -1482,19 +1482,26 @@ pmap_dfr(list(mT=mT, nT=nT, sdT=sdT, mC=mC, nC=nC, sdC=sdC), f)
      
 #=================================================================================================================================================       
        
-clean_reg_names <- function(fit) {
+clean_reg <- function(fm, nm, uniq = TRUE) {
   
-  fmla <- fixed_form_rma(fit)
-  vec <- rownames(fit$b)
-  
-  vec <- clean_reg(fmla, vec)
-  if(fit$int.only) vec[vec=="Intercept"||vec==""] <- "Overall Effect"
-  rownames(fit$b) <- vec
-  rownames(fit$beta) <- vec
-  rownames(fit$vb) <- colnames(fit$vb) <- vec
-  return(fit)
+  vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
+  subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
+  l <- rapply(strsplit(nm, ":"), sub, how = "list",
+              perl = TRUE,
+              pattern = sprintf("^(?!(%1$s)$)(%1$s)(.+)$", subpat),
+              replacement = "\\3")
+  vec <- vapply(l, paste0, "", collapse = ":")
+  if(uniq) vec <- make.unique(vec)
+  vec[vec=="intrcpt"] <- "Intercept"
+  return(vec)
 }     
   
+#=================================================================================================================================================       
+       
+any_num_vec <- function(vec){
+  any(grepl("^[0-9]{1,}$", gsub(":", "", vec)))
+}
+       
 #=================================================================================================================================================       
        
 results_rma2 <- function(fit, digits = 3, robust = FALSE, blank_sign = "", 
@@ -1862,15 +1869,39 @@ results_rma3 <- function(fit, digits = 3, robust = FALSE, blank_sign = "",
 results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "", 
                         cat_shown = 1, shift_up = NULL, shift_down = NULL, 
                         drop_rows = NULL, drop_cols = NULL, QM = TRUE, 
-                        QE = FALSE, sig = TRUE, clean_names = TRUE, 
+                        QE = FALSE, sig = TRUE, clean_names = NULL, 
                         tidy = FALSE){
   
   if(!inherits(fit, "rma.mv")) stop("Model is not 'rma.mv()'.", call. = FALSE)
-  fixed_eff <- is.null(fit$random)
   
+  fixed_eff <- is.null(fit$random)
+  cr <- if(!fixed_eff) is_crossed(fit) else FALSE
+  
+  lm_fit <- lm(fixed_form_rma(fit), data = clubSandwich:::getData(fit), na.action = "na.omit")
+  
+  cl <- clean_reg(lm_fit, names(coef(lm_fit)))
+  
+  if(is.null(clean_names)){
+    
+  if(any_num_vec(cl)) {
+    
+    clean_names <- FALSE
+    
+  } else { 
+    
+    clean_names <- TRUE
+    
+    }
+  } 
+  
+  if(clean_names) names(lm_fit$coefficients) <- cl
   if(clean_names) fit <- clean_reg_names(fit)
   
-  cr <- if(!fixed_eff) is_crossed(fit) else FALSE
+  lm_coef <- coef(lm_fit)
+  
+  is_singular <- anyNA(lm_coef)
+  
+  if(is_singular) message("Note:",dQuote(toString(names(lm_coef)[is.na(lm_coef)])), " dropped due to lack of data.\n")
   
   if(robust & any(cr) || robust & fixed_eff) { 
     
@@ -1891,9 +1922,8 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     
   } else {
     
-    a <- as.data.frame(conf_int(fit, vcov = "CR2"))[-1]
-    
-    b <- coef_test(fit, vcov = "CR2")
+    a <- suppressWarnings(as.data.frame(conf_int(fit, vcov = "CR2"))[-1])
+    b <- suppressWarnings(coef_test(fit, vcov = "CR2"))
     a$p <- b$p_Satt
     a$t <- b$tstat
     
@@ -1902,10 +1932,14 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     setNames(a, c("Estimate","SE","t","Df","p-value","Lower","Upper"))
   }
   
+  rn <- rownames(res)[1]
+  
+  if(rn == "intrcpt") rownames(res)[1] <- "(Intercept)"
+  
   res_org <- res
   res <- na.omit(res)
-
-  if(nrow(res) != nrow(res_org)) message("Note: ",dQuote(toString(setdiff(rownames(res_org), rownames(res)))), " dropped due to inestimablity.\n")
+  
+  if(robust & nrow(res) != nrow(res_org)) message("Note:",dQuote(toString(setdiff(rownames(res_org),rownames(res)))), " dropped due to inestimablity under Robust estimation.\n")
   
   if(QE){
     qe <- data.frame(Estimate = fit$QE, Df = nobs.rma(fit), 
@@ -1915,15 +1949,17 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     res <- bind_rows(res, qe)
   }
   
-  
   if(QM){
     
     mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
     
-    if(inherits(mc, "try-error") || is.na(mc$p_val)) { 
+    bad <- inherits(mc,"try-error")
+    
+    if(robust & bad || robust && !bad && is.na(mc$p_val)) { 
       robust <- FALSE
       message("Note: Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.")
     }
+    
     qm <- if(robust) {
       
       data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
@@ -1931,9 +1967,11 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
         dplyr::rename("p-value"="pval") 
       
     } else {
+      
       data.frame(Estimate = fit$QM, Df = fit$QMdf[1], 
                  pval = fit$QMp, row.names = "QM") %>%
         dplyr::rename("p-value"="pval") 
+      
     }
     res <- bind_rows(res, qm)
   }
@@ -1974,7 +2012,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
     return(out)
   }
   
-  res <- rbind(res, "RANDOM:" = NA)
+  res <- rbind(res, "|RANDOM|" = NA)
   
   Sys.setlocale(locale = "Greek")
   
@@ -2071,7 +2109,6 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   if(tidy) out <- cbind(Terms = rownames(out), set_rownames(out, NULL))
   
   return(out)
-  if(sig) cat("Signif. 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1")                   
 }                      
 
 #=================================================================================================================================================                   
