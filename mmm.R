@@ -1934,7 +1934,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   
   rn <- rownames(res)[1]
   
-  if(rn == "intrcpt") rownames(res)[1] <- "(Intercept)"
+  if(rn == "intrcpt") rownames(res)[1] <- "Intercept"
   
   res_org <- res
   res <- na.omit(res)
