@@ -1934,7 +1934,7 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   
   rn <- rownames(res)[1]
   
-  if(rn == "intrcpt") rownames(res)[1] <- "Intercept"
+  if(rn == "intrcpt") rownames(res)[1] <- "(Intercept)"
   
   res_org <- res
   res <- na.omit(res)
@@ -2291,18 +2291,34 @@ clean_reg2 <- function(fmla, vec) {
 
 #=================================================================================================================================================                     
   
-clean_reg <- function(fm, nm) {
-  vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
-  subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
-  l <- rapply(strsplit(nm, ":"), sub, how = "list",
-              perl = TRUE,
-              pattern = sprintf("^(?!(%1$s)$)(%1$s)(.+)$", subpat),
-              replacement = "\\3")
-  vec <- vapply(l, paste0, "", collapse = ":")
-  vec[vec=="intrcpt"] <- "Intercept"
-  return(vec)
-}                     
-                                        
+clean_reg <- function(fm, nm, uniq = TRUE) {
+vars <- vapply(attr(terms(fm), "variables"), deparse, "")[-1L]
+subpat <- paste0(gsub("([()])", "\\\\\\1", vars), collapse = "|")
+l <- rapply(strsplit(nm, ":"), sub, how = "list",
+perl = TRUE,
+pattern = sprintf("^(?!(%1$s)$)(%1$s)(.+)$", subpat),
+replacement = "\\3")
+vec <- vapply(l, paste0, "", collapse = ":")
+if(uniq) vec <- make.unique(vec)
+vec[vec=="intrcpt"] <- "(Intercept)"
+return(vec)
+}                  
+      
+#================================================================================================================================================          
+          
+clean_reg_names <- function(fit) {
+    
+    fmla <- fixed_form_rma(fit)
+    vec <- rownames(fit$b)
+    
+    vec <- clean_reg(fmla, vec)
+    if(fit$int.only) vec[vec=="(Intercept)"||vec==""] <- "Overall Effect"
+    rownames(fit$b) <- vec
+    rownames(fit$beta) <- vec
+    rownames(fit$vb) <- colnames(fit$vb) <- vec
+    return(fit)
+  }
+          
 #=================================================================================================================================================                       
 set_rownames <- function (object = nm, nm) 
 {
