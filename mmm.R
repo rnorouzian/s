@@ -1492,7 +1492,7 @@ clean_reg <- function(fm, nm, uniq = TRUE) {
               replacement = "\\3")
   vec <- vapply(l, paste0, "", collapse = ":")
   if(uniq) vec <- make.unique(vec)
-  vec[vec=="intrcpt"] <- "Intercept"
+  vec[vec=="intrcpt"] <- "(Intercept)"
   return(vec)
 }     
   
