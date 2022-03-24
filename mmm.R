@@ -2500,9 +2500,8 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
 R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL, 
                     level_names = NULL, blank_sign = ""){
   
-  LL <- list(...)
-  
   if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
+  LL <- list(...)
   
   first <- LL[[1]]
   
@@ -2529,27 +2528,20 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
   f <- function(fit){
     
     if(fit$withG || fit$withH || fit$withR) stop("These models not yet supported.", call. = FALSE)
-    
-    
+        
     if(robust){
       
       mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
       
       bad <- inherits(mc,"try-error")
       
-      if(robust & bad || robust && !bad && is.na(mc$p_val)) { 
+      if(bad || !bad && is.na(mc$p_val)) { 
         robust <- FALSE
         message("Note: Robust p-value unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\np-value is model-based.\n")
       }
     }
     
-    p <- if(robust) {
-      
-      mc$p_val
-    } else {
-      
-      fit$QMp
-    }
+    p <- if(robust) mc$p_val else fit$QMp
     
     sigmas <- setNames(sqrt(fit$sigma2), lvl_names) 
     
@@ -2577,7 +2569,8 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
 }                                                                        
                                                                         
 #=================================================================================================================================================
-                     
+#=================================================================================================================================================
+                                                                        
 round_effects <- function(data, digits, yi_vi_names = c("yi","vi")){
   
   eff <- names(data) %in% yi_vi_names
@@ -2585,7 +2578,7 @@ round_effects <- function(data, digits, yi_vi_names = c("yi","vi")){
   return(data)
 }
 
-#==============
+#=================================================================================================================================================
 
 random_rows <- function(x) {
   
