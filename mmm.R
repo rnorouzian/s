@@ -2500,8 +2500,8 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
 R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL, 
                     level_names = NULL, blank_sign = ""){
   
-  if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
   LL <- list(...)
+  if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
   
   first <- LL[[1]]
   
