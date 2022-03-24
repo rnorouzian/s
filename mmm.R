@@ -2419,7 +2419,7 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
   
   lookup <- c(Contrast="contrast",Estimate="estimate","Mean"="emmean",t="t.ratio",
               Df="df","p-value"="p.value",Lower="lower.CL",Upper="upper.CL",
-              Df1="df1", Df2="df2","F"="F.ratio","m"="model term")
+              Df1="df1", Df2="df2","F"="F.ratio",m="model term")
   
   names(lookup)[12] <- mutos_name
   
@@ -2495,7 +2495,87 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
  return(out)
 }                   
                    
-#=================================================================================================================================================                   
+#=================================================================================================================================================
+                                                                        
+R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL, 
+                    level_names = NULL, blank_sign = ""){
+  
+  LL <- list(...)
+  
+  if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
+  
+  first <- LL[[1]]
+  
+  Model <- if(is.null(model_names)) as.character(substitute(...())) else model_names
+  
+  yi <- as.formula(paste0(as.character(fixed_form_rma(first))[2],"~1"))
+  
+  null_fit <- update.rma(first, mods = NULL, yi = yi)
+  
+  lvl_names <- if(is.null(level_names)) sapply(strsplit(null_fit$s.names,"/",fixed=TRUE),tail,1) else level_names
+  
+  sigmasn <- setNames(sqrt(null_fit$sigma2), lvl_names)
+  
+  sigma_totaln <- sqrt(sum(sigmasn^2))
+  
+  null_res <- data.frame(Model = "No (M)UTOS",._A_.= sigma_totaln,._D_.=NA,R2=NA)
+  
+  null_res <- add_column(null_res, as.data.frame(t(sigmasn)), .after = "._A_.")
+  
+  z <- function(nm) paste(intToUtf8(963),nm) 
+  
+  Sys.setlocale(locale = "Greek")
+  
+  f <- function(fit){
+    
+    if(fit$withG || fit$withH || fit$withR) stop("These models not yet supported.", call. = FALSE)
+    
+    
+    if(robust){
+      
+      mc <- try(clubSandwich::Wald_test(fit, constrain_zero(fit$btt), "CR2"), silent = TRUE)   
+      
+      bad <- inherits(mc,"try-error")
+      
+      if(robust & bad || robust && !bad && is.na(mc$p_val)) { 
+        robust <- FALSE
+        message("Note: Robust p-value unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\np-value is model-based.\n")
+      }
+    }
+    
+    p <- if(robust) {
+      
+      mc$p_val
+    } else {
+      
+      fit$QMp
+    }
+    
+    sigmas <- setNames(sqrt(fit$sigma2), lvl_names) 
+    
+    sigma_total <- sqrt(sum(sigmas^2)) 
+    
+    R2 <- (sigma_totaln - sigma_total) / sigma_totaln*1e2
+    
+    c(._A_.=sigma_total,sigmas,._D_.=p, R2=R2)
+  }
+  
+  out <- map_dfr(LL, f) %>% as.data.frame() %>%
+    add_column(Model = Model, .before = "._A_.")
+  
+  res <- roundi(bind_rows(null_res, out), digits = digits)
+  
+  res[-1,]$R2 <- paste0(res[-1,]$R2,"%")
+  
+  names(res)[names(res) %in% c("._A_.",lvl_names,"._D_.")] <- c(z(c("total",lvl_names)),"p-value")
+
+  blk <- paste0(paste0(rep(" ",digits-1), collapse=""), "NA", collapse ="")
+  
+  res[res == blk] <- blank_sign
+  
+  return(res)
+}                                                                        
+                                                                        
 #=================================================================================================================================================
                      
 round_effects <- function(data, digits, yi_vi_names = c("yi","vi")){
