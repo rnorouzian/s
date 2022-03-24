@@ -2498,7 +2498,7 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
 #=================================================================================================================================================
                                                                         
 R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL, 
-                    level_names = NULL, blank_sign = ""){
+                    level_names = NULL, blank_sign = "", null_name = "No (M)UTOS"){
   
   LL <- list(...)
   if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
@@ -2517,7 +2517,7 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
   
   sigma_totaln <- sqrt(sum(sigmasn^2))
   
-  null_res <- data.frame(Model = "No (M)UTOS",._A_.= sigma_totaln,._D_.=NA,R2=NA)
+  null_res <- data.frame(Model = null_name,._A_.= sigma_totaln,._D_.=NA,R2=NA)
   
   null_res <- add_column(null_res, as.data.frame(t(sigmasn)), .after = "._A_.")
   
