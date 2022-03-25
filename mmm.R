@@ -2525,6 +2525,14 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
   LL <- list(...)
   if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
   
+  bad <- sapply(LL, function(i) i$withG || i$withH || i$withR)
+         
+  if(any(bad)) stop("These models not yet supported.", call. = FALSE)
+    
+  ok <- length(unique(map(LL,~map_chr(strsplit(.$s.names,"/",fixed=TRUE),tail,1))))==1
+  
+  if(!ok) stop("Models must have the same random-effects.", call.=FALSE)
+    
   first <- LL[[1]]
   
   Model <- if(is.null(model_names)) as.character(substitute(...())) else model_names
@@ -2548,8 +2556,6 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
   Sys.setlocale(locale = "Greek")
   
   f <- function(fit){
-    
-    if(fit$withG || fit$withH || fit$withR) stop("These models not yet supported.", call. = FALSE)
         
     if(robust){
       
