@@ -1261,13 +1261,13 @@ plot_rma <- plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FA
     xcv$x.scales$tck=c(1,0)
     xcv$y.scales$tck=c(1,0)
     
-    return(invisible(x))
+    return(invisible(as.data.frame(x)))
     
     xcv 
     
   } else {
     
-    return(invisible(x))
+    return(invisible(as.data.frame(x)))
   }
 }
 
