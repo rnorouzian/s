@@ -2474,7 +2474,7 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
      
       } else { 
         
-        cbind(mutos_test = as.character(specs)[2],as.data.frame(emmeans::test(ems, joint=TRUE)))
+        cbind("(M)UTOS Test"= as.character(specs)[2],as.data.frame(emmeans::test(ems, joint=TRUE)))
         
         }
       
