@@ -2487,7 +2487,8 @@ post_rma <- function(fit, specs = NULL, cont_var = NULL, by = NULL, horiz = TRUE
   out <- set_rownames(out,NULL)
   
   out <- out %>%
-    dplyr::rename(tidyselect::any_of(lookup))
+    dplyr::rename(tidyselect::any_of(lookup)) %>% 
+    dplyr::select(-tidyselect::any_of("note"))
   
   p.values <- as.numeric(out$"p-value")
   
