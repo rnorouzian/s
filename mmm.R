@@ -419,8 +419,8 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
 #=======================================================================================================================================================
                         
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
-                      structure = c("simple","typical","complex"), output_highest_level = FALSE,
-                      toplab = NULL, cex = 1, main = NULL, rowcount = TRUE, main_extra_name = FALSE,
+                      structure = c("simple","typical","complex"), toplab = NULL, cex = 1, 
+                      main = NULL, rowcount = TRUE, main_extra_name = FALSE,
                       abb_names = FALSE, abb_length = 12, abb_except = NULL) 
 {
   
@@ -489,7 +489,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
     
-    if(output_highest_level) res
+    invisible(res)
     
   } else {
     
