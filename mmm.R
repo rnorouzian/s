@@ -33,7 +33,15 @@ numerize_case <- function(X, num_except = NULL){
 }  
                  
 #===============================================================================================================================
-                    
+
+is_large <- function(x, limit = 4) {
+  result <- floor(log10(abs(x)))
+  result[!is.finite(result)] <- 0
+  any(result > limit)
+} 
+                 
+#================================================================================================================================
+                 
 rm.allrowNA <- function(X) { 
   
 X[rowSums(is.na(X) | X == "") != ncol(X), , drop = FALSE]  
@@ -1978,6 +1986,8 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
       message("Note: Robust QM unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\nQM results are model-based.\n")
     }
     
+    if(is_large(mc$Fstat)) { message("Note: Robust QM is unreasonably large, likely robust estimation is unfit for the model (use 'robust=FALSE').") }
+    
     qm <- if(robust) {
       
       data.frame(Estimate = mc$Fstat, Df = mc$df_num, 
@@ -2128,19 +2138,6 @@ results_rma <- function(fit, digits = 3, robust = TRUE, blank_sign = "",
   
   return(out)
 }                      
-
-#=================================================================================================================================================                   
-                   
-roundi2 <- function(x, digits = 7){
-  
-  if(!inherits(x, c("data.frame","tibble"))) stop("'x' must be a 'data.frame'.", call. = FALSE)
-  
-  num <- sapply(x, is.numeric)
-  
-  x[num] <- lapply(x[num], round, digits)
-  
-  return(x)
-}
                      
 #=================================================================================================================================================                     
                      
@@ -2578,8 +2575,10 @@ R2_rma <- function(..., robust = TRUE, digits = 3, model_names = NULL,
         robust <- FALSE
         message("Note: Robust p-value unavailable,likely: \n1- Some moderators in <2 clusters OR/AND \n2- High # of coefficients vs. # of highest clusters.\np-value is model-based.\n")
       }
+      
+      if(is_large(mc$Fstat)) { message("Note: Robust estimation seems unfit for the model (use 'robust=FALSE').") } 
     }
-    
+      
     p <- if(robust) mc$p_val else fit$QMp
     
     sigmas <- setNames(sqrt(fit$sigma2), lvl_names) 
