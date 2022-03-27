@@ -443,9 +443,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
 {
   
   data <- full_clean(data) %>%
-    group_by({{highest_level}}) %>%
-    mutate(row_id = row_number()) %>%
-    ungroup()
+    mutate(row_id = row_number())
   
   dot_cols <- rlang::ensyms(...)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
