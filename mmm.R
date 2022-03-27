@@ -506,7 +506,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     main <- if(is.null(main_org)) paste(main_no., main) else main
     
-    if(panel_label) main <- paste0("(",LETTERS[seq_along(list2plot)],") ", main)
+    if(panel_label) main <- paste0("(",make.unique(rep(LETTERS,1e2))[seq_along(list2plot)],") ", main)
     
     if(main_extra_name) main <- paste0(main, " [",nms,"]")
     
