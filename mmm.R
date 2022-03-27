@@ -443,7 +443,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
 {
   
   data <- full_clean(data) %>%
-    mutate(row_id = row_number())
+    group_by({{highest_level}}) %>%
+    mutate(row_id = row_number()) %>%
+    ungroup()
   
   dot_cols <- rlang::ensyms(...)
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
@@ -531,7 +533,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount, cex.main = cex.main, main = main))
   }
-}                   
+}                    
                         
 #=====================================================================================================================================================
                         
