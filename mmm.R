@@ -23,7 +23,15 @@ abber_case <- function(X, abb_except = NULL, abb_length = 10){
   X[y] <- lapply(X[y], abbreviate, minlength=abb_length, named=FALSE)
   return(X)
 }                    
+       
+#===============================================================================================================================                    
                     
+numerize_case <- function(X, num_except = NULL){
+  y <- names(Filter(function(i) is.character(i) | is.factor(i), X[setdiff(names(X), num_except)]))
+  X[y] <- lapply(X[y], function(k) as.integer(as.factor(k)))
+  return(X)
+}  
+                 
 #===============================================================================================================================
                     
 rm.allrowNA <- function(X) { 
@@ -421,7 +429,8 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
 meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), toplab = NULL, cex = 1, 
                       main = NULL, rowcount = TRUE, main_extra_name = FALSE,
-                      abb_names = FALSE, abb_length = 12, abb_except = NULL) 
+                      abb_names = FALSE, abb_length = 12, abb_except = NULL, 
+                      num_names = FALSE, num_except = NULL) 
 {
   
   data <- full_clean(data) %>%
@@ -436,8 +445,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   ss <- substitute(highest_level)
   sss <- deparse(ss)
   
-  if(abb_names & is.null(highest_level_name)) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except)
-  
+  if(abb_names) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except) 
+  if(num_names) data <- numerize_case(data, num_except = num_except)
+
   if(reset){
     graphics.off()
     org.par <- par(no.readonly = TRUE)
