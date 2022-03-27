@@ -439,7 +439,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
                       main = NULL, rowcount = TRUE, main_extra_name = FALSE,
                       abb_names = FALSE, abb_length = 12, abb_except = NULL, 
                       num_names = FALSE, num_except = NULL, num_zero = FALSE, 
-                      panel_label = FALSE, cex.main = 1) 
+                      panel_label = FALSE, cex.main = 1, rev_order = TRUE) 
 {
   
   data <- full_clean(data) %>%
@@ -482,7 +482,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
       dplyr::ungroup(.) %>%
       dplyr::group_split(grp, .keep = FALSE)
     
-    res <- Filter(NROW, rev(hlist))
+    hlist <- if(rev_order) rev(hlist) else hlist
+    
+    res <- Filter(NROW, hlist)
     
     main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
     
@@ -506,13 +508,18 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     main <- if(is.null(main_org)) paste(main_no., main) else main
     
-    if(panel_label) main <- paste0("(",make.unique(rep(LETTERS,5e1))[seq_along(list2plot)],") ", main)
+    if(panel_label) {
+      
+      pan_lab <- make.unique(rep(LETTERS,5e1))[seq_along(list2plot)]
+    
+      main <- paste0("(",pan_lab,") ", main)
+    }
     
     if(main_extra_name) main <- paste0(main, " [",nms,"]")
     
     invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount, cex.main = cex.main)))
     
-    invisible(res)
+    invisible(if(panel_label) setNames(res, pan_lab) else res)
     
   } else {
     
