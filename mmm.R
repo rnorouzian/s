@@ -502,7 +502,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
     
-    main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
+    main <- if(is.null(main)) stringr::str_to_title(ifelse(main_no. > 1, pluralify_(sss), sss)) else main
     
     main <- if(is.null(main_org)) paste(main_no., main) else main
     
