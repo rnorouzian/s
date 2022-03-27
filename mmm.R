@@ -2979,3 +2979,7 @@ suppressWarnings(
   }))
   
 options(dplyr.summarise.inform = FALSE)                        
+
+#=======================================================================================================================================================
+# Bug in plotrix package fixed, and reported to package author                        
+source("https://raw.githubusercontent.com/rnorouzian/s/main/sizetree.R")                        
