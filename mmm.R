@@ -438,7 +438,8 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
                       structure = c("simple","typical","complex"), toplab = NULL, cex = 1, 
                       main = NULL, rowcount = TRUE, main_extra_name = FALSE,
                       abb_names = FALSE, abb_length = 12, abb_except = NULL, 
-                      num_names = FALSE, num_except = NULL) 
+                      num_names = FALSE, num_except = NULL, panel_label = FALSE,
+                      cex.main = 1) 
 {
   
   data <- full_clean(data) %>%
@@ -450,12 +451,14 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   idx <- str_cols %in% names(data)
   if(!all(idx)) stop(toString(dQuote(str_cols[!idx]))," not found in the 'data'.", call. = FALSE)
   
+  main_org <- main
+  
   ss <- substitute(highest_level)
   sss <- deparse(ss)
   
   if(abb_names) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except) 
   if(num_names) data <- numerize_case(data, num_except = num_except)
-
+  
   if(reset){
     graphics.off()
     org.par <- par(no.readonly = TRUE)
@@ -501,11 +504,13 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     main <- if(is.null(main)) ifelse(main_no. > 1, pluralify_(sss), sss) else main
     
-    main <- paste(main_no., main)
+    main <- if(is.null(main_org)) paste(main_no., main) else main
+    
+    if(panel_label) main <- paste0("(",LETTERS[seq_along(list2plot)],") ", main)
     
     if(main_extra_name) main <- paste0(main, " [",nms,"]")
     
-    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount)))
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount, cex.main = cex.main)))
     
     invisible(res)
     
@@ -524,9 +529,9 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     if(LL > 1L) { par(mfrow = n2mfrow(LL)) }
     
-    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount))
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount, cex.main = cex.main, main = main))
   }
-}                  
+}                   
                         
 #=====================================================================================================================================================
                         
