@@ -548,7 +548,7 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
                       abb_names = FALSE, abb_length = 7, abb_except = NULL, 
                       num_names = FALSE, num_except = NULL, num_zero = FALSE, 
                       panel_label = TRUE, cex = 1, cex.main = 1, rev_order = TRUE, 
-                      rev_page = FALSE, reset = TRUE) 
+                      rev_page = FALSE, reset = TRUE, index = NULL) 
 {
   
   data <- full_clean(data) %>%
@@ -596,6 +596,15 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
     
     res <- Filter(NROW, hlist)
     
+    LL <- length(res)
+    
+    if(!is.null(index)){ 
+      
+      index <- index[index <= LL & index >= 1]
+    } 
+    
+    res <- if(!is.null(index)) res[index] else res
+    
     main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
     
     typic <- function(vec) vec[ceiling(length(vec)/2)]
@@ -617,7 +626,7 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
       dev <- if(!rev_page) n2mfrow(LL) else rev(n2mfrow(LL))
       par(mfrow = dev) 
       
-      }
+    }
     
     main <- if(is.null(main)) stringr::str_to_title(ifelse(main_no. > 1, pluralify_(sss), sss)) else main
     
@@ -646,6 +655,15 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
     if(!all(idx)) return(message("Error: ",toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " data column.")))
     
     list2plot <- lapply(highest_level_name, function(i) filter(data, !!ss == i))
+    
+    LL <- length(list2plot)
+    
+    if(!is.null(index)){ 
+      
+      index <- index[index <= LL & index >= 1]
+    } 
+    
+    list2plot <- if(!is.null(index)) list2plot[index] else list2plot
     
     LL <- length(list2plot)
     
