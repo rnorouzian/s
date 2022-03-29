@@ -449,7 +449,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
   
   idx <- str_cols %in% names(data)
-  if(!all(idx)) stop(toString(dQuote(str_cols[!idx]))," not found in the 'data'.", call. = FALSE)
+  if(!all(idx)) return(message("Error: ",toString(dQuote(str_cols[!idx]))," not found in the data."))
   
   main_org <- main
   
@@ -528,7 +528,7 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
     
     idx <- highest_level_name %in% highest_level_names 
     
-    if(!all(idx)) stop(toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column."), call. = FALSE)
+    if(!all(idx)) return(message("Error: ",toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " column.")))
     
     list2plot <- lapply(highest_level_name, function(i) subset(data, eval(ss) == i))
     
