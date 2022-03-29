@@ -1395,8 +1395,8 @@ plot_rma <- plot_rma_effect <- function(fit, full=FALSE, multiline=TRUE, dots=FA
   if(!is.null(index)){ 
 
    len <- length(x)  
-   index[index > len] <- len 
-   index[index < 1] <- index
+   index <- index[index <= len & index >= 1] 
+
 }            
               
   x <- if(!is.null(index)) x[index] else if(int_only) x[grep(":",names(x))] else x
