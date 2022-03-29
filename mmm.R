@@ -434,7 +434,7 @@ meta_tree2 <- function(data, highest_level, ..., highest_level_name = NULL, rese
 
 #=======================================================================================================================================================
                         
-meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
+meta_tree3 <- function(data, highest_level, ..., highest_level_name = NULL, reset = TRUE,
                       structure = c("simple","typical","complex"), toplab = NULL, cex = 1, 
                       main = NULL, rowcount = TRUE, main_extra_name = FALSE,
                       abb_names = FALSE, abb_length = 12, abb_except = NULL, 
@@ -541,6 +541,126 @@ meta_tree <- function(data, highest_level, ..., highest_level_name = NULL, reset
 }                    
                         
 #=====================================================================================================================================================
+
+meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,  
+                      structure = c("simple","typical","complex"), toplab = NULL, 
+                      main = NULL, main_extra = NULL, rowcount = FALSE, 
+                      abb_names = FALSE, abb_length = 7, abb_except = NULL, 
+                      num_names = FALSE, num_except = NULL, num_zero = FALSE, 
+                      panel_label = TRUE, cex = 1, cex.main = 1, rev_order = TRUE, 
+                      rev_page = FALSE, reset = TRUE) 
+{
+  
+  data <- full_clean(data) %>%
+    mutate(row_id = row_number())
+  
+  dot_cols <- rlang::ensyms(...)
+  dot_cols <- if(row_id) append(dot_cols, rlang::sym("row_id")) else dot_cols
+  str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
+  
+  ss <- dot_cols[[1]]
+  sss <- str_cols[1]
+  
+  idx <- str_cols %in% names(data)
+  if(!all(idx)) return(message("Error: ",toString(dQuote(str_cols[!idx]))," not found in the data."))
+  
+  main_org <- main
+  
+  if(abb_names) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except) 
+  if(num_names) data <- numerize_case(data, num_except = num_except, num_zero = num_zero)
+  
+  if(reset){
+    graphics.off()
+    org.par <- par(no.readonly = TRUE)
+    on.exit(par(org.par))
+  }
+  
+  data <- data %>%
+    dplyr::select(!!!dot_cols)
+  
+  if(is.null(highest_level_name)){
+    
+    struc <- match.arg(structure) 
+    
+    hlist <- data %>%
+      dplyr::group_by(!!sym(sss)) %>%
+      dplyr::mutate(grp = dplyr::across(tidyselect::all_of(str_cols[-1]), ~ {
+        tmp <- dplyr::n_distinct(.)
+        dplyr::case_when(tmp  == 1 ~ 1, tmp == n() ~ 2, tmp > 1 & tmp < n() ~ 3,  TRUE ~ 4)
+      }) %>%
+        purrr::reduce(stringr::str_c, collapse = "")) %>%
+      dplyr::ungroup(.) %>%
+      dplyr::group_split(grp, .keep = FALSE)
+    
+    hlist <- if(rev_order) rev(hlist) else hlist
+    
+    res <- Filter(NROW, hlist)
+    
+    main_no. <- sapply(res, function(i) length(unique(i[[sss]])))
+    
+    typic <- function(vec) vec[ceiling(length(vec)/2)]
+    
+    nms <- lapply(res, function(i){
+      nr <- sapply(split(i, i[[sss]]), nrow);
+      study_type <- if(struc == "typical") {typic(as.numeric(names(table(nr))))
+      } else if(struc == "simple") {min(as.numeric(names(table(nr))))
+      } else {max(as.numeric(names(table(nr))))};
+      names(nr)[nr == study_type][1]
+    })
+    
+    list2plot <- lapply(seq_along(res),function(i) filter(res[[i]], !!ss == nms[i]))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { 
+      
+      dev <- if(!rev_page) n2mfrow(LL) else rev(n2mfrow(LL))
+      par(mfrow = dev) 
+      
+      }
+    
+    main <- if(is.null(main)) stringr::str_to_title(ifelse(main_no. > 1, pluralify_(sss), sss)) else main
+    
+    main <- if(is.null(main_org)) paste(main_no., main) else main
+    
+    if(panel_label) {
+      
+      pan_lab <- make.unique(rep(LETTERS,1e1))[seq_along(list2plot)]
+      
+      main <- paste0("(",pan_lab,") ", main)
+    }
+    
+    if(!is.null(main_extra)) main <- paste0(main, " [",main_extra,"]")
+    
+    invisible(lapply(seq_along(list2plot), function(i) data.tree_(list2plot[[i]], main = main[i], toplab, cex, rowcount, cex.main = cex.main)))
+    
+    invisible(if(panel_label) setNames(res, pan_lab) else res)
+    
+  } else {
+    
+    highest_level_name <- trimws(highest_level_name)
+    highest_level_names <- unique(data[[sss]])
+    
+    idx <- highest_level_name %in% highest_level_names 
+    
+    if(!all(idx)) return(message("Error: ",toString(dQuote(highest_level_name[!idx]))," not found in the ", paste0("'",sss,"'", " data column.")))
+    
+    list2plot <- lapply(highest_level_name, function(i) filter(data, !!ss == i))
+    
+    LL <- length(list2plot)
+    
+    if(LL > 1L) { 
+      
+      dev <- if(!rev_page) n2mfrow(LL) else rev(n2mfrow(LL))
+      par(mfrow = dev) 
+      
+    }
+    
+    invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount, cex.main = cex.main, main = main))
+  }
+}                        
+                        
+#======================================================================================================================================================                     
                         
 latent_metareg <- function(fit, formula, group.id = c("first","second"), 
                            tol = 1e-12, std = FALSE) 
