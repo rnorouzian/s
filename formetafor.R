@@ -1342,7 +1342,7 @@ sizetree2 <- function (x, left = 0, top, right = 1, lastcenter = NA,
 
 #=================================================================================================================================================
 
-needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'fastDummies', 'emmeans','tidyverse')      
+needzzsf <- c('metafor', 'clubSandwich', 'nlme', 'effects', 'lexicon', 'plotrix', 'rlang', 'emmeans','tidyverse')      
 
 not.have23 <- needzzsf[!(needzzsf %in% installed.packages()[,"Package"])]
 if(length(not.have23)) install.packages(not.have23)
