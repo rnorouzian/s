@@ -333,56 +333,6 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
   }
 }                        
 
-# M====================================================================================================================================================== 
-
-do_context <- function(data, context_vars, group_id = NULL){
-  
-  data <- full_clean(data)
-  all_names <- names(data)
-  
-  id <- grep("id|group|grp|study", all_names, value = TRUE, ignore.case = TRUE)
-  
-  if(is.null(group_id) || !all(group_id %in% all_names)) { 
-    
-    stop(paste(toString(dQuote(group_id)), "not found for 'group_id' in the 'data'.", if(length(id)>0) 
-      paste("\nPossibly you meant to use", toString(dQuote(id)), "as 'group_id', no?")), call. = FALSE) 
-    
-  }
-  
-  ok <- context_vars %in% all_names
-  
-  if(!all(ok)) message(paste("\n", toString(dQuote(context_vars[!ok])), "not found in the 'data' thus ignored."))
-  
-  context_vars <- context_vars[ok] 
-  
-  dum_vars <- all_names[sapply(data, function(i)is.character(i)|is.factor(i))]
-  
-  dum_names <- context_vars[context_vars %in% dum_vars]
-  
-  is_dum <- length(dum_names) > 0
-  
-  num_names <- context_vars[!(context_vars %in% dum_vars)]
-  
-  is_num <- length(num_names) > 0
-  
-  if(is_num){
-    data <- data %>%
-      group_by(across(all_of(group_id))) %>%                          
-      mutate(across(all_of(num_names), list(whn = ~ . - mean(.), btw = ~ mean(.)))) %>% 
-      as.data.frame()
-  }
-  
-  if(is_dum){
-    data <- data %>%
-      dummy_cols(select_columns = dum_names) %>% 
-      group_by(across(all_of(group_id))) %>%                          
-      mutate(across(starts_with(paste0(dum_names, "_")), list(whn = ~ . - mean(.), btw = ~ mean(.)))) %>% 
-      as.data.frame()
-  }
-  
-  return(data)
-}
-
 # M================================================================================================================================================
 
 interactive_outlier <- function(fit, cook = NULL, st_del_res_z = NULL, 
@@ -563,7 +513,7 @@ plot_rma <- function(fit, full=FALSE, multiline=TRUE,
                      lwd, ylim, xlim, factor.names, band.transparency, 
                      band.colors, grid=TRUE, axes, lattice, rotx, roty,
                      symbols=list(pch = 19), ticks.x, lines=TRUE, robust=FALSE,
-                     cluster, plot=TRUE, ...) 
+                     cluster, plot=TRUE, dots=FALSE, ...) 
 {
   
   if(!inherits(fit,c("rma.mv","rma","rma.uni"))) stop("Model is not 'rma()' or 'rma.mv()'.", call. = FALSE)
@@ -593,7 +543,7 @@ plot_rma <- function(fit, full=FALSE, multiline=TRUE,
   x <- if(!is.null(index)) x[index] else x
   
   if(plot){   
-    xcv <- plot(x, multiline=multiline, main=main, rug=FALSE, dots=FALSE,
+    xcv <- plot(x, multiline=multiline, main=main, rug=FALSE, dots=dots,
                 confint=confint, x.var=x.var, z.var=z.var, key.args=key.args, 
                 xlab=xlab, ylab=ylab, colors=colors, cex=cex, lty=lty, 
                 lwd=lwd, ylim=ylim, xlim=xlim, factor.names=factor.names, band.transparency=band.transparency, 
