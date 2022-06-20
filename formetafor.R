@@ -1154,7 +1154,7 @@ R2_rma <- function(..., robust = TRUE, digits = 3,
                    model_names = NULL, null_model = NULL,
                    level_names = NULL, blank_sign = "", 
                    null_name = "No (M)UTOS", tol_large = 1e4)
-  {
+{
   
   LL <- list(...)
   if(!all(sapply(LL,inherits,"rma.mv"))) stop("Some models are not 'rma.mv()'.", call. = FALSE)
@@ -1171,9 +1171,9 @@ R2_rma <- function(..., robust = TRUE, digits = 3,
   
   Model <- if(is.null(model_names)) as.character(substitute(...())) else model_names
   
-  yi <- as.formula(paste0(as.character(fixed_form_rma(first))[2],"~1"))
+  .zolqui_. <- as.formula(paste0(as.character(fixed_form_rma(first))[2],"~1"))
   
-  null_fit <- if(is.null(null_model)) update.rma(first, mods = NULL, yi = yi) else null_model
+  null_fit <- if(is.null(null_model)) update.rma(first, yi = .zolqui_.) else null_model
   
   lvl_names <- if(is.null(level_names)) sapply(strsplit(null_fit$s.names,"/",fixed=TRUE),tail,1) else level_names
   
