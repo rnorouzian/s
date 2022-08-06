@@ -178,7 +178,7 @@ data.tree_ <- function(data, toplab = NULL, cex = 1, rowcount = FALSE, cex_top =
 
 # M===============================================================================================================================
 
-meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,  
+meta_tree <- function(data, ..., effect = TRUE, highest_level_name = NULL,  
                       structure = c("simple","typical","complex"), toplab = NULL, 
                       main = NULL, main_extra = NULL, rowcount = FALSE, 
                       abb_names = FALSE, abb_length = 6, abb_except = NULL, 
@@ -188,10 +188,10 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
 {
   
   data <- full_clean(data) %>%
-    mutate(row_id = row_number())
+    mutate(effect = row_number())
   
   dot_cols <- rlang::ensyms(...)
-  dot_cols <- if(row_id) append(dot_cols, rlang::sym("row_id")) else dot_cols
+  dot_cols <- if(effect) append(dot_cols, rlang::sym("effect")) else dot_cols
   str_cols <- purrr::map_chr(dot_cols, rlang::as_string)
   
   ss <- dot_cols[[1]]
@@ -207,7 +207,7 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
   
   if(abb_names) data <- abber_case(data, abb_length = abb_length, abb_except = abb_except) 
   if(num_names) data <- numerize_case(data, num_except = num_except, num_zero = num_zero)
-
+  
   if(reset){
     graphics.off()
     org.par <- par(no.readonly = TRUE)
@@ -317,7 +317,7 @@ meta_tree <- function(data, ..., row_id = TRUE, highest_level_name = NULL,
     
     invisible(lapply(list2plot, data.tree_, toplab, cex, rowcount, cex.main = cex_main, main = main, cex_top = cex_top))
   }
-}                        
+}
 
 # M================================================================================================================================================
 
