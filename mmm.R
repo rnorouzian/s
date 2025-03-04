@@ -1514,7 +1514,7 @@ cfactor <- function(df) metafor:::.cmicalc(df)
   
   
 #=================================================================================================================================================  
-# To get SDs for each group, the best choice is the first formula:
+# To get SDs for each group, the best choice is the first formula (https://doi.org/10.1186/1471-2288-5-13):
   
 range_iqr_n2sd <- function(min, max, q1, q3, n, dat) { ( (max-min) / (4*qnorm( (n-.375)/(n+.25)))) + 
   ( (q3-q1) / (4*qnorm( (n*.75-.125)/(n+.25))) ) } 
